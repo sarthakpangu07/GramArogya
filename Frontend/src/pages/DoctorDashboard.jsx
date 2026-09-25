@@ -58,7 +58,7 @@ const DoctorDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/visits/doctor-patients",
+                "https://gramarogya-27q3.onrender.com/api/visits/doctor-patients",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -100,7 +100,7 @@ const DoctorDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/facilities/active",
+                "https://gramarogya-27q3.onrender.com/api/facilities/active",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -142,7 +142,7 @@ const DoctorDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/teleconsultations/doctor",
+                "https://gramarogya-27q3.onrender.com/api/teleconsultations/doctor",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -202,7 +202,7 @@ const DoctorDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/follow-ups",
+                "https://gramarogya-27q3.onrender.com/api/follow-ups",
                 {
                     method: "POST",
                     headers: {
@@ -266,7 +266,7 @@ const DoctorDashboard = () => {
             setError("");
 
             const response = await fetch(
-                `http://localhost:5000/api/follow-ups/${followUpId}/status`,
+                `https://gramarogya-27q3.onrender.com/api/follow-ups/${followUpId}/status`,
                 {
                     method: "PATCH",
                     headers: {
@@ -322,7 +322,7 @@ const DoctorDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/follow-ups/doctor",
+                "https://gramarogya-27q3.onrender.com/api/follow-ups/doctor",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -367,7 +367,7 @@ const DoctorDashboard = () => {
             setError("");
 
             const response = await fetch(
-                `http://localhost:5000/api/teleconsultations/${consultationId}/status`,
+                `https://gramarogya-27q3.onrender.com/api/teleconsultations/${consultationId}/status`,
                 {
                     method: "PATCH",
                     headers: {
@@ -570,7 +570,7 @@ const DoctorDashboard = () => {
 
             const consultationResponse =
                 await fetch(
-                    "http://localhost:5000/api/consultations",
+                    "https://gramarogya-27q3.onrender.com/api/consultations",
                     {
                         method: "POST",
                         headers: {
@@ -617,7 +617,7 @@ const DoctorDashboard = () => {
             if (decision === "referral") {
                 const referralResponse =
                     await fetch(
-                        "http://localhost:5000/api/referrals",
+                        "https://gramarogya-27q3.onrender.com/api/referrals",
                         {
                             method: "POST",
                             headers: {

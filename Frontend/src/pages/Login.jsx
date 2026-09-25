@@ -31,7 +31,7 @@ const Login = () => {
             setLoading(true);
 
             const response = await fetch(
-                "http://localhost:5000/api/users/login",
+                "https://gramarogya-27q3.onrender.com/api/users/login",
                 {
                     method: "POST",
                     headers: {

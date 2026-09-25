@@ -31,7 +31,7 @@ const PHCDashboard = () => {
 
             try {
                 const response = await fetch(
-                    "http://localhost:5000/api/facilities/phc",
+                    "https://gramarogya-27q3.onrender.com/api/facilities/phc",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -80,7 +80,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/visits/phc-pending?facilityId=${facilityId}`,
+                `https://gramarogya-27q3.onrender.com/api/visits/phc-pending?facilityId=${facilityId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -125,7 +125,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/visits/phc-accepted?facilityId=${facilityId}`,
+                `https://gramarogya-27q3.onrender.com/api/visits/phc-accepted?facilityId=${facilityId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -164,7 +164,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/visits/${requestId}/accept`,
+                `https://gramarogya-27q3.onrender.com/api/visits/${requestId}/accept`,
                 {
                     method: "PATCH",
                     headers: {
@@ -245,7 +245,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/triage/${triageId}/vitals`,
+                `https://gramarogya-27q3.onrender.com/api/triage/${triageId}/vitals`,
                 {
                     method: "PATCH",
                     headers: {
@@ -353,7 +353,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/emergencies/phc-pending",
+                "https://gramarogya-27q3.onrender.com/api/emergencies/phc-pending",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -405,7 +405,7 @@ const PHCDashboard = () => {
 
         try {
             const response = await fetch(
-                `http://localhost:5000/api/emergencies/${emergencyId}/status`,
+                `https://gramarogya-27q3.onrender.com/api/emergencies/${emergencyId}/status`,
                 {
                     method: "PATCH",
                     headers: {

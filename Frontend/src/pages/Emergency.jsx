@@ -31,7 +31,7 @@ function Emergency() {
             setSuccess(null);
 
             const response = await fetch(
-                "http://localhost:5000/api/emergencies",
+                "https://gramarogya-27q3.onrender.com/api/emergencies",
                 {
                     method: "POST",
                     headers: {

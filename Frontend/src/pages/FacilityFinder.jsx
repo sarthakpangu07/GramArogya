@@ -20,7 +20,7 @@ const FacilityFinder = () => {
 
             try {
                 const response = await fetch(
-                    "http://localhost:5000/api/triage/my-records",
+                    "https://gramarogya-27q3.onrender.com/api/triage/my-records",
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -70,7 +70,7 @@ const FacilityFinder = () => {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/visits",
+                "https://gramarogya-27q3.onrender.com/api/visits",
                 {
                     method: "POST",
                     headers: {
@@ -137,7 +137,7 @@ const FacilityFinder = () => {
 
                 try {
                     const response = await fetch(
-                        `http://localhost:5000/api/facilities/nearby?latitude=${latitude}&longitude=${longitude}`,
+                        `https://gramarogya-27q3.onrender.com/api/facilities/nearby?latitude=${latitude}&longitude=${longitude}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`

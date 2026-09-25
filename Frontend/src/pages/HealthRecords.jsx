@@ -17,7 +17,7 @@ const HealthRecords = () => {
             const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "http://localhost:5000/api/health-records/my",
+                "https://gramarogya-27q3.onrender.com/api/health-records/my",
                 {
                     headers: {
                         Authorization: `Bearer ${token}`

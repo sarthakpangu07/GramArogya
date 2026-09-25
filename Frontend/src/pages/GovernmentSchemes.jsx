@@ -50,7 +50,7 @@ function GovernmentSchemes() {
             setSearched(false);
 
             const response = await fetch(
-                "http://localhost:5000/api/government-schemes/match",
+                "https://gramarogya-27q3.onrender.com/api/government-schemes/match",
                 {
                     method: "POST",
                     headers: {

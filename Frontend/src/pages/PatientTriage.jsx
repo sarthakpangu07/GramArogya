@@ -106,7 +106,7 @@ const PatientTriage = () => {
             setLoading(true);
 
             const response = await fetch(
-                "http://localhost:5000/api/triage/check",
+                "https://gramarogya-27q3.onrender.com/api/triage/check",
                 {
                     method: "POST",
                     headers: {

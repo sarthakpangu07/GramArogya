@@ -16,7 +16,7 @@ const Teleconsultation = () => {
             const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "http://localhost:5000/api/teleconsultations/my",
+                "https://gramarogya-27q3.onrender.com/api/teleconsultations/my",
                 {
                     method: "GET",
                     headers: {
