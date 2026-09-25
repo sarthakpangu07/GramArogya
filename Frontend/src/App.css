@@ -1,0 +1,154 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f8f6;
+    color: #1f2937;
+}
+
+.triage-page {
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.triage-container {
+    max-width: 850px;
+    margin: 0 auto;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.triage-container h1 {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 38px;
+}
+
+.triage-subtitle {
+    text-align: center;
+    color: #667085;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.safety-note {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 30px;
+}
+
+.form-section {
+    margin-bottom: 30px;
+}
+
+.form-section h2 {
+    font-size: 20px;
+    margin-bottom: 14px;
+}
+
+.symptom-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.symptom-button {
+    padding: 10px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.symptom-button:hover {
+    border-color: #2563eb;
+}
+
+.symptom-button.selected {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.form-section input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.severity-options {
+    display: flex;
+    gap: 12px;
+}
+
+.severity-options button {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.severity-options button:hover {
+    border-color: #2563eb;
+}
+
+.severity-options button.selected {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.optional-text {
+    color: #667085;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background: #1d4ed8;
+}
+
+@media (max-width: 600px) {
+    .triage-page {
+        padding: 20px 12px;
+    }
+
+    .triage-container {
+        padding: 24px 18px;
+    }
+
+    .triage-container h1 {
+        font-size: 30px;
+    }
+
+    .severity-options {
+        flex-direction: column;
+    }
+}
