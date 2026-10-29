@@ -6,6 +6,8 @@ GramArogya is a healthcare accessibility platform designed to connect patients i
 
 The platform focuses on bridging the gap between rural patients and quality healthcare through a connected, accessible, and technology-driven healthcare workflow.
 
+Live Demo - https://gram-arogya-mu.vercel.app/
+
 🚨 Problem Statement
 
 People living in rural and underserved communities often face challenges such as:
