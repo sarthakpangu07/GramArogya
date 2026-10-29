@@ -1,0 +1,772 @@
+
+.government-schemes-page {
+    width: 100%;
+    padding: 8px 0 40px;
+    color: #183832;
+}
+
+.government-schemes-layout {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 1px solid #e3ebe5;
+    border-radius: 21px;
+    background: #ffffff;
+    box-shadow: 0 15px 45px rgba(28, 67, 51, 0.06);
+}
+
+/* Page heading */
+
+.government-schemes-heading {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    padding: 29px;
+    border-bottom: 1px solid #e9efeb;
+    background: linear-gradient(120deg, #ffffff, #f3faf5);
+}
+
+.government-schemes-heading-icon {
+    display: grid;
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    place-items: center;
+    border: 1px solid #d8e9dd;
+    border-radius: 17px;
+    background: #eaf5ed;
+    color: #2c7858;
+    font-size: 28px;
+}
+
+.government-schemes-heading-copy {
+    min-width: 0;
+}
+
+.government-schemes-eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    color: #33805b;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.government-schemes-heading h2 {
+    margin: 0 0 8px;
+    color: #183e33;
+    font-size: clamp(22px, 3vw, 29px);
+    letter-spacing: -0.7px;
+}
+
+.government-schemes-heading p {
+    max-width: 650px;
+    margin: 0;
+    color: #728178;
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* Information note */
+
+.government-schemes-info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin: 22px 27px 0;
+    padding: 14px 15px;
+    border: 1px solid #d9e8ed;
+    border-radius: 11px;
+    background: #f3f8fa;
+    color: #55717a;
+}
+
+.government-schemes-info-note > span {
+    font-size: 16px;
+}
+
+.government-schemes-info-note p {
+    margin: 1px 0 0;
+    font-size: 11px;
+    line-height: 1.85;
+}
+
+/* Eligibility form */
+
+.government-schemes-form {
+    margin: 24px 27px 0;
+    padding: 23px;
+    border: 1px solid #e1eae3;
+    border-radius: 15px;
+    background: #ffffff;
+}
+
+.government-schemes-form-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    margin-bottom: 24px;
+}
+
+.government-schemes-step {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    place-items: center;
+    border: 1px solid #d9eadf;
+    border-radius: 11px;
+    background: #eff7f1;
+    color: #2b7659;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.government-schemes-form-heading h3 {
+    margin: 2px 0 6px;
+    color: #294b3a;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.government-schemes-form-heading p {
+    margin: 0;
+    color: #849289;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.government-schemes-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 16px;
+}
+
+.government-schemes-field {
+    min-width: 0;
+}
+
+.government-schemes-field label {
+    display: block;
+    margin-bottom: 9px;
+    color: #405a4a;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.government-schemes-field label span {
+    color: #bf4842;
+}
+
+.government-schemes-field input,
+.government-schemes-field select {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 13px;
+    border: 1px solid #dce6df;
+    border-radius: 10px;
+    outline: none;
+    background: #fcfdfc;
+    color: #274438;
+    font-size: 12px;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.government-schemes-field input::placeholder {
+    color: #a0ada5;
+}
+
+.government-schemes-field input:focus,
+.government-schemes-field select:focus {
+    border-color: #318364;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(49, 131, 100, 0.09);
+}
+
+.government-schemes-field select {
+    cursor: pointer;
+}
+
+.government-schemes-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 22px;
+    padding: 13px;
+    border: 1px solid #f0cbc7;
+    border-radius: 11px;
+    background: #fff4f2;
+    color: #a6332d;
+}
+
+.government-schemes-error > span {
+    display: grid;
+    width: 21px;
+    height: 21px;
+    flex: 0 0 21px;
+    place-items: center;
+    border-radius: 50%;
+    background: #f9dedb;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.government-schemes-error p {
+    margin: 1px 0 0;
+    font-size: 12px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+.government-schemes-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 49px;
+    margin-top: 25px;
+    padding: 13px 17px;
+    border: 0;
+    border-radius: 10px;
+    background: linear-gradient(100deg, #24775d, #318d6a);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 15px rgba(35, 120, 88, 0.15);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.government-schemes-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 9px 19px rgba(35, 120, 88, 0.22);
+}
+
+.government-schemes-submit:disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+    box-shadow: none;
+}
+
+.government-schemes-arrow {
+    margin-left: auto;
+    font-size: 18px;
+}
+
+.government-schemes-spinner {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: government-schemes-spin 0.7s linear infinite;
+}
+
+@keyframes government-schemes-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Results heading */
+
+.government-schemes-results {
+    padding: 29px 27px 0;
+}
+
+.government-schemes-results-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 19px;
+}
+
+.government-schemes-results-heading h3 {
+    margin: 0 0 8px;
+    color: #244938;
+    font-size: 20px;
+    letter-spacing: -0.4px;
+}
+
+.government-schemes-results-heading p {
+    max-width: 580px;
+    margin: 0;
+    color: #849188;
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.government-schemes-count {
+    display: grid;
+    min-width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid #d6e7da;
+    border-radius: 12px;
+    background: #eff7f1;
+    color: #2d7854;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+/* Scheme cards */
+
+.government-schemes-list {
+    display: grid;
+    gap: 18px;
+}
+
+.government-scheme-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e1e9e3;
+    border-radius: 15px;
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(29, 70, 47, 0.035);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+.government-scheme-card:hover {
+    transform: translateY(-2px);
+    border-color: #bfdcc8;
+    box-shadow: 0 10px 25px rgba(31, 87, 57, 0.07);
+}
+
+.government-scheme-card-header {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 20px;
+    border-bottom: 1px solid #e8efea;
+    background: linear-gradient(115deg, #fbfdfb, #f3faf5);
+}
+
+.government-scheme-card-icon {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    place-items: center;
+    border: 1px solid #d8e9dd;
+    border-radius: 13px;
+    background: #eaf5ed;
+    color: #347b58;
+    font-size: 24px;
+}
+
+.government-scheme-card-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.government-scheme-number {
+    display: block;
+    margin-bottom: 5px;
+    color: #42805a;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+
+.government-scheme-card-title h4 {
+    margin: 0;
+    color: #294c39;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.government-scheme-match {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border: 1px solid #d9ebde;
+    border-radius: 8px;
+    background: #eff8f1;
+    color: #2f7b52;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* Description */
+
+.government-scheme-description {
+    margin: 0;
+    padding: 19px 20px;
+    border-bottom: 1px solid #edf1ee;
+    color: #607568;
+    font-size: 12px;
+    line-height: 1.9;
+    overflow-wrap: anywhere;
+}
+
+/* Benefits, eligibility and application */
+
+.government-scheme-section {
+    padding: 19px 20px;
+    border-bottom: 1px solid #edf1ee;
+}
+
+.government-scheme-section h5 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 14px;
+    color: #315541;
+    font-size: 12px;
+}
+
+.government-scheme-section h5 > span {
+    display: grid;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 27px;
+    place-items: center;
+    border: 1px solid #e0eae2;
+    border-radius: 8px;
+    background: #f1f7f2;
+    color: #37805a;
+    font-size: 14px;
+}
+
+.government-scheme-benefits,
+.government-scheme-list-items {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.government-scheme-benefits li,
+.government-scheme-list-items li {
+    position: relative;
+    padding-left: 19px;
+    color: #607568;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.government-scheme-benefits li::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: #35815b;
+    content: "✓";
+    font-weight: 800;
+}
+
+.government-scheme-list-items li::before {
+    position: absolute;
+    top: 7px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #73a182;
+    content: "";
+}
+
+.government-scheme-steps {
+    display: grid;
+    gap: 13px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.government-scheme-steps li {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    color: #607568;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.government-scheme-step-number {
+    display: grid;
+    width: 25px;
+    height: 25px;
+    flex: 0 0 25px;
+    place-items: center;
+    border: 1px solid #dce9df;
+    border-radius: 8px;
+    background: #f2f8f3;
+    color: #32744f;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+/* Scheme message */
+
+.government-scheme-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 16px 20px 0;
+    padding: 13px;
+    border: 1px solid #d9e8ed;
+    border-radius: 10px;
+    background: #f3f8fa;
+    color: #55717a;
+}
+
+.government-scheme-message > span {
+    font-size: 15px;
+}
+
+.government-scheme-message p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+/* Official website link */
+
+.government-scheme-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 17px 20px;
+    background: #fbfdfb;
+}
+
+.government-scheme-footer-note {
+    color: #87948b;
+    font-size: 10px;
+    line-height: 1.7;
+}
+
+.government-scheme-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 37px;
+    padding: 9px 12px;
+    border: 1px solid #2c7959;
+    border-radius: 9px;
+    background: #2c7959;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    text-decoration: none;
+    transition:
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.government-scheme-link:hover {
+    background: #205f45;
+    box-shadow: 0 5px 12px rgba(35, 120, 88, 0.16);
+}
+
+.government-scheme-link > span {
+    font-size: 14px;
+}
+
+/* Empty state */
+
+.government-schemes-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 35px 20px 40px;
+    border: 1px dashed #d7e5db;
+    border-radius: 15px;
+    background: #fbfdfb;
+    text-align: center;
+}
+
+.government-schemes-empty-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    border: 1px solid #dcece0;
+    border-radius: 17px;
+    background: #eef7f0;
+    color: #438364;
+    font-size: 28px;
+}
+
+.government-schemes-empty h4 {
+    margin: 16px 0 8px;
+    color: #315440;
+    font-size: 15px;
+}
+
+.government-schemes-empty p {
+    max-width: 440px;
+    margin: 0;
+    color: #849289;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+/* Responsive */
+
+@media (max-width: 700px) {
+    .government-schemes-heading {
+        gap: 12px;
+        padding: 22px;
+    }
+
+    .government-schemes-heading-icon {
+        width: 47px;
+        height: 47px;
+        flex-basis: 47px;
+        border-radius: 13px;
+    }
+
+    .government-schemes-heading h2 {
+        font-size: 22px;
+    }
+
+    .government-schemes-form,
+    .government-schemes-info-note {
+        margin-right: 16px;
+        margin-left: 16px;
+    }
+
+    .government-schemes-form {
+        padding: 18px;
+    }
+
+    .government-schemes-results {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+}
+
+@media (max-width: 520px) {
+    .government-schemes-page {
+        padding: 8px 0 25px;
+    }
+
+    .government-schemes-layout {
+        border-radius: 16px;
+    }
+
+    .government-schemes-heading {
+        padding: 20px 15px;
+    }
+
+    .government-schemes-heading-icon {
+        width: 43px;
+        height: 43px;
+        flex-basis: 43px;
+        font-size: 22px;
+    }
+
+    .government-schemes-heading h2 {
+        font-size: 20px;
+    }
+
+    .government-schemes-heading p {
+        font-size: 11px;
+    }
+
+    .government-schemes-info-note {
+        margin: 16px 13px 0;
+        padding: 12px;
+    }
+
+    .government-schemes-form {
+        margin: 17px 13px 0;
+        padding: 15px;
+    }
+
+    .government-schemes-form-heading h3 {
+        font-size: 14px;
+    }
+
+    .government-schemes-fields {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .government-schemes-field input,
+    .government-schemes-field select {
+        min-height: 44px;
+    }
+
+    .government-schemes-results {
+        padding: 23px 13px 0;
+    }
+
+    .government-schemes-results-heading h3 {
+        font-size: 17px;
+    }
+
+    .government-schemes-results-heading p {
+        font-size: 10px;
+    }
+
+    .government-scheme-card-header {
+        flex-wrap: wrap;
+        padding: 15px;
+    }
+
+    .government-scheme-card-title h4 {
+        font-size: 14px;
+    }
+
+    .government-scheme-match {
+        margin-left: 59px;
+    }
+
+    .government-scheme-description,
+    .government-scheme-section {
+        padding: 16px 15px;
+    }
+
+    .government-scheme-card-footer {
+        align-items: stretch;
+        padding: 15px;
+    }
+
+    .government-scheme-link {
+        width: 100%;
+    }
+
+    .government-scheme-message {
+        margin-right: 15px;
+        margin-left: 15px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .government-schemes-spinner {
+        animation: none;
+    }
+
+    .government-schemes-submit,
+    .government-scheme-card,
+    .government-scheme-link {
+        transition: none;
+    }
+}

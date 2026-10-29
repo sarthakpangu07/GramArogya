@@ -2,7 +2,9 @@ const express = require("express");
 
 const {
     createReferral,
-    getMyReferrals
+    getMyReferrals,
+    getSpecialistReferrals,
+    updateReferralStatus
 } = require("../controller/referralController");
 
 const protect = require("../middlewares/authMiddleware");
@@ -26,4 +28,21 @@ router.get(
     getMyReferrals
 );
 
+// Specialist views referrals assigned to their facility
+router.get(
+    "/specialist",
+    protect,
+    authorize("specialist"),
+    getSpecialistReferrals
+);
+
+// Specialist accepts or completes a referral
+router.patch(
+    "/:id/status",
+    protect,
+    authorize("specialist"),
+    updateReferralStatus
+);
+
 module.exports = router;
+

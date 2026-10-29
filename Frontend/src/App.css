@@ -1,58 +1,873 @@
+
+:root {
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    color: #183832;
+    background: #f5f8f7;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+
+    --green-950: #103c32;
+    --green-900: #164b3e;
+    --green-800: #1c6250;
+    --green-700: #24765e;
+    --green-600: #2e8b6d;
+    --green-100: #e6f4ed;
+    --green-50: #f0f8f3;
+
+    --text-primary: #183832;
+    --text-secondary: #71817c;
+    --border: #e1e9e5;
+    --surface: #ffffff;
+    --page-bg: #f5f8f7;
+    --danger: #c23d3d;
+    --radius-lg: 20px;
+    --shadow-card: 0 18px 55px rgba(24, 67, 54, 0.08);
+}
+
 * {
     box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f8f6;
-    color: #1f2937;
+    min-height: 100%;
+    width: 100%;
 }
+
+body {
+    min-width: 320px;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    color: var(--text-primary);
+    background: var(--page-bg);
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 3px solid rgba(46, 139, 109, 0.35);
+    outline-offset: 3px;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Shared brand */
+
+.brand-lockup,
+.login-brand,
+.mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.brand-mark {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    place-items: center;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #2e9472, #19644e);
+    color: #ffffff;
+    font-size: 25px;
+    font-weight: 800;
+    box-shadow: 0 7px 17px rgba(29, 113, 83, 0.2);
+}
+
+.brand-mark-light {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: none;
+}
+
+.brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.brand-copy strong {
+    font-size: 20px;
+    letter-spacing: -0.6px;
+    font-weight: 800;
+}
+
+.brand-copy small {
+    font-size: 11px;
+    opacity: 0.72;
+    letter-spacing: 0.2px;
+}
+
+/* Login layout */
+
+.login-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 34px;
+    background:
+        radial-gradient(
+            circle at 12% 10%,
+            rgba(191, 229, 208, 0.34),
+            transparent 29%
+        ),
+        #f2f7f4;
+}
+
+.login-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    width: min(1120px, 100%);
+    min-height: 690px;
+    overflow: hidden;
+    border: 1px solid rgba(213, 228, 219, 0.8);
+    border-radius: 28px;
+    background: var(--surface);
+    box-shadow: 0 25px 85px rgba(23, 64, 50, 0.12);
+}
+
+.login-brand-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 43px 42px 30px;
+    overflow: hidden;
+    color: #ffffff;
+    background:
+        radial-gradient(
+            circle at 100% 75%,
+            rgba(79, 169, 123, 0.27),
+            transparent 35%
+        ),
+        linear-gradient(150deg, #174c3e 0%, #103a31 60%, #0d332c 100%);
+}
+
+.login-brand-panel::before,
+.login-brand-panel::after {
+    position: absolute;
+    z-index: 0;
+    content: "";
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+}
+
+.login-brand-panel::before {
+    width: 370px;
+    height: 370px;
+    right: -190px;
+    top: 20%;
+}
+
+.login-brand-panel::after {
+    width: 270px;
+    height: 270px;
+    right: -135px;
+    top: calc(20% + 50px);
+}
+
+.login-brand,
+.brand-message,
+.care-highlights,
+.brand-panel-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.brand-message {
+    margin: 58px 0 36px;
+}
+
+.eyebrow {
+    display: inline-block;
+    color: var(--green-700);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+}
+
+.light-eyebrow {
+    color: #a9ddbf;
+}
+
+.brand-message h1 {
+    margin: 19px 0 18px;
+    font-size: clamp(34px, 3.5vw, 45px);
+    line-height: 1.16;
+    letter-spacing: -1.7px;
+    font-weight: 750;
+}
+
+.brand-message h1 span {
+    color: #9be0b7;
+}
+
+.brand-message > p {
+    max-width: 390px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 14px;
+    line-height: 1.9;
+}
+
+.care-highlights {
+    display: grid;
+    gap: 19px;
+}
+
+.care-highlight {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.highlight-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #b6ebc9;
+    font-size: 23px;
+}
+
+.care-highlight > span:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.care-highlight strong {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.care-highlight small {
+    color: rgba(255, 255, 255, 0.63);
+    font-size: 11px;
+}
+
+.brand-panel-footer {
+    margin-top: 34px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.13);
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 10px;
+    line-height: 1.8;
+}
+
+/* Login form */
+
+.login-form-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 30px 48px 24px;
+    background: #ffffff;
+}
+
+.login-form-top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-height: 43px;
+    gap: 12px;
+}
+
+.mobile-brand {
+    display: none;
+}
+
+.language-selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #5f746b;
+    font-size: 12px;
+}
+
+.language-selector label {
+    font-weight: 600;
+}
+
+.language-selector select {
+    max-width: 135px;
+    padding: 9px 26px 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text-primary);
+    background: #ffffff;
+    cursor: pointer;
+}
+
+.login-form-content {
+    width: 100%;
+    max-width: 395px;
+    margin: auto;
+    padding: 35px 0;
+}
+
+.form-kicker {
+    display: inline-block;
+    margin-bottom: 13px;
+    color: var(--green-700);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+}
+
+.login-form-content h2 {
+    margin: 0;
+    color: #173b32;
+    font-size: clamp(28px, 3vw, 35px);
+    letter-spacing: -1.15px;
+    line-height: 1.25;
+}
+
+.login-description {
+    margin: 13px 0 32px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.login-field {
+    margin-bottom: 21px;
+}
+
+.login-field > label,
+.password-label-row label {
+    display: block;
+    margin-bottom: 9px;
+    color: #344c43;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.login-field input {
+    display: block;
+    width: 100%;
+    min-height: 49px;
+    padding: 13px 15px;
+    border: 1px solid #dce6e0;
+    border-radius: 11px;
+    outline: none;
+    background: #fbfcfb;
+    color: var(--text-primary);
+    font-size: 13px;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.login-field input::placeholder {
+    color: #a0ada6;
+}
+
+.login-field input:focus {
+    border-color: var(--green-600);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(46, 139, 109, 0.09);
+}
+
+.password-input-wrap {
+    position: relative;
+}
+
+.password-input-wrap input {
+    padding-right: 67px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: var(--green-700);
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.primary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 49px;
+    padding: 13px 20px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(100deg, #24775d, #2f906d);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 8px 18px rgba(35, 120, 88, 0.17);
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease;
+}
+
+.primary-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 11px 23px rgba(35, 120, 88, 0.23);
+}
+
+.primary-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.login-submit {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.login-submit > span:last-child {
+    margin-left: auto;
+    font-size: 18px;
+}
+
+.button-spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.login-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0 0 18px;
+    padding: 12px;
+    border: 1px solid #f3cccc;
+    border-radius: 10px;
+    background: #fff4f3;
+    color: #a72b2b;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.login-error > span:first-child {
+    display: grid;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    place-items: center;
+    border-radius: 50%;
+    background: #f8d8d5;
+    font-weight: 800;
+}
+
+.login-security-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 25px;
+    padding: 13px 14px;
+    border: 1px solid #e4eee7;
+    border-radius: 11px;
+    background: #f6faf7;
+    color: #6d8177;
+}
+
+.login-security-note > span {
+    color: var(--green-700);
+    font-size: 17px;
+}
+
+.login-security-note p {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.8;
+}
+
+.login-footer {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 18px;
+    border-top: 1px solid #edf1ee;
+    color: #92a099;
+    font-size: 10px;
+}
+
+.login-footer span {
+    text-align: right;
+}
+
+/* Patient application */
+
+.patient-app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f5f8f6;
+}
+
+.app-topbar {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 78px;
+    padding: 14px clamp(20px, 5vw, 70px);
+    border-bottom: 1px solid #e5ece7;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+}
+
+.app-topbar .brand-mark {
+    width: 43px;
+    height: 43px;
+    flex-basis: 43px;
+    border-radius: 13px;
+    font-size: 23px;
+}
+
+.app-topbar .brand-copy strong {
+    font-size: 18px;
+}
+
+.app-topbar .brand-copy small {
+    color: #819188;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 16px;
+}
+
+.logout-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 9px 13px;
+    border: 1px solid #dce7df;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #476357;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.logout-button:hover {
+    background: #f0f7f2;
+}
+
+.patient-welcome {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1320px;
+    width: calc(100% - 48px);
+    margin: 30px auto 20px;
+    padding: clamp(27px, 4vw, 43px);
+    overflow: hidden;
+    border-radius: 21px;
+    background:
+        radial-gradient(
+            circle at 90% 30%,
+            rgba(91, 177, 134, 0.24),
+            transparent 28%
+        ),
+        linear-gradient(110deg, #164f3f, #1f7055);
+    color: #ffffff;
+}
+
+.patient-welcome .eyebrow {
+    color: #a8dfbd;
+}
+
+.patient-welcome h1 {
+    margin: 12px 0 9px;
+    font-size: clamp(27px, 3vw, 37px);
+    line-height: 1.2;
+    letter-spacing: -0.8px;
+}
+
+.patient-welcome p {
+    max-width: 540px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.77);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.welcome-symbol {
+    position: relative;
+    display: grid;
+    width: 100px;
+    height: 100px;
+    flex: 0 0 100px;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.23);
+    border-radius: 29px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #b8edcb;
+    font-size: 70px;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.welcome-dot {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #b8edcb;
+    box-shadow: 0 0 0 5px rgba(184, 237, 203, 0.13);
+}
+
+.patient-navigation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 1320px;
+    width: calc(100% - 48px);
+    margin: 0 auto 23px;
+    padding: 8px;
+    overflow-x: auto;
+    border: 1px solid #e5ece7;
+    border-radius: 15px;
+    background: #ffffff;
+    scrollbar-width: thin;
+}
+
+.patient-nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 43px;
+    flex: 0 0 auto;
+    padding: 10px 13px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #71817a;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.nav-item-icon {
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border-radius: 7px;
+    background: #f0f5f1;
+    color: #547967;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.patient-nav-item:hover {
+    background: #f5f9f6;
+    color: var(--green-800);
+}
+
+.patient-nav-item.active {
+    border-color: #d8eadd;
+    background: #eaf5ed;
+    color: #1b674b;
+}
+
+.patient-nav-item.active .nav-item-icon {
+    background: #d4eadb;
+    color: #1b674b;
+}
+
+.patient-nav-item.emergency-nav-item {
+    color: #af3b3b;
+}
+
+.patient-nav-item.emergency-nav-item .nav-item-icon {
+    background: #fff0ee;
+    color: #c54d42;
+}
+
+.patient-nav-item.emergency-nav-item.active {
+    border-color: #f2cbc6;
+    background: #fff2ef;
+}
+
+.patient-content {
+    width: calc(100% - 48px);
+    max-width: 1320px;
+    min-height: 280px;
+    flex: 1;
+    margin: 0 auto;
+    padding-bottom: 35px;
+}
+
+.app-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 19px clamp(20px, 5vw, 70px);
+    border-top: 1px solid #e4ebe6;
+    background: #ffffff;
+    color: #84948b;
+    font-size: 10px;
+}
+
+.footer-heart {
+    margin-right: 7px;
+    color: #2a8564;
+}
+
+/* Login fallback page */
+
+.unavailable-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 24px;
+    background: #f2f7f4;
+}
+
+.unavailable-card {
+    width: min(480px, 100%);
+    padding: 38px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.unavailable-card .brand-mark {
+    margin: 0 auto 20px;
+}
+
+.unavailable-card h1 {
+    margin: 0 0 12px;
+    font-size: 25px;
+}
+
+.unavailable-card p {
+    margin: 0 0 25px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+.unavailable-card .primary-button {
+    min-width: 130px;
+}
+
+/* Existing symptom-triage page */
 
 .triage-page {
     min-height: 100vh;
     padding: 40px 20px;
+    background: #f5f8f6;
 }
 
 .triage-container {
     max-width: 850px;
     margin: 0 auto;
-    background: white;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 38px;
+    border: 1px solid #e3ebe6;
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow: var(--shadow-card);
 }
 
 .triage-container h1 {
+    margin: 0 0 10px;
     text-align: center;
-    margin-bottom: 10px;
-    font-size: 38px;
+    font-size: 34px;
+    letter-spacing: -0.8px;
 }
 
 .triage-subtitle {
+    margin: 0 0 25px;
+    color: var(--text-secondary);
     text-align: center;
-    color: #667085;
-    margin-bottom: 25px;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 .safety-note {
-    background: #fff7ed;
-    border: 1px solid #fed7aa;
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 14px;
-    line-height: 1.5;
     margin-bottom: 30px;
+    padding: 14px 16px;
+    border: 1px solid #f3d6ad;
+    border-radius: 12px;
+    background: #fff8ed;
+    color: #82561f;
+    font-size: 13px;
+    line-height: 1.7;
 }
 
 .form-section {
-    margin-bottom: 30px;
+    margin-bottom: 26px;
 }
 
 .form-section h2 {
-    font-size: 20px;
-    margin-bottom: 14px;
+    margin-bottom: 13px;
+    font-size: 16px;
+    color: #29493e;
 }
 
 .symptom-grid {
@@ -62,30 +877,35 @@ body {
 }
 
 .symptom-button {
-    padding: 10px 16px;
-    border: 1px solid #cbd5e1;
-    border-radius: 20px;
-    background: white;
+    padding: 10px 15px;
+    border: 1px solid #d7e3da;
+    border-radius: 22px;
+    background: #ffffff;
+    color: #49665a;
+    font-size: 13px;
     cursor: pointer;
-    font-size: 14px;
 }
 
 .symptom-button:hover {
-    border-color: #2563eb;
+    border-color: var(--green-600);
 }
 
 .symptom-button.selected {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
+    border-color: var(--green-700);
+    background: var(--green-700);
+    color: #ffffff;
 }
 
-.form-section input {
+.form-section input,
+.form-section textarea,
+.form-section select {
     width: 100%;
-    padding: 13px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 15px;
+    padding: 13px 14px;
+    border: 1px solid #d7e3da;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--text-primary);
+    font-size: 14px;
 }
 
 .severity-options {
@@ -96,46 +916,296 @@ body {
 .severity-options button {
     flex: 1;
     padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    background: white;
+    border: 1px solid #d7e3da;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #49665a;
     cursor: pointer;
-    font-size: 15px;
 }
 
 .severity-options button:hover {
-    border-color: #2563eb;
+    border-color: var(--green-600);
 }
 
 .severity-options button.selected {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
+    border-color: var(--green-700);
+    background: var(--green-100);
+    color: var(--green-900);
 }
 
 .optional-text {
-    color: #667085;
-    font-size: 13px;
     margin-top: 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
 }
 
 .submit-button {
     width: 100%;
     padding: 14px;
-    border: none;
-    border-radius: 8px;
-    background: #2563eb;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
+    border: 0;
+    border-radius: 10px;
+    background: var(--green-700);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 750;
     cursor: pointer;
 }
 
 .submit-button:hover {
-    background: #1d4ed8;
+    background: var(--green-800);
 }
 
-@media (max-width: 600px) {
+.error-message {
+    margin: 0 0 15px;
+    padding: 12px;
+    border: 1px solid #f3cccc;
+    border-radius: 10px;
+    background: #fff4f3;
+    color: #a72b2b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+    .login-page {
+        padding: 20px;
+    }
+
+    .login-layout {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        min-height: 640px;
+    }
+
+    .login-brand-panel {
+        padding: 34px 27px 25px;
+    }
+
+    .brand-message h1 {
+        font-size: 35px;
+    }
+
+    .login-form-panel {
+        padding: 25px 30px 22px;
+    }
+
+    .app-topbar {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+}
+
+/* Mobile */
+
+@media (max-width: 650px) {
+    .login-page {
+        display: block;
+        padding: 0;
+        background: #ffffff;
+    }
+
+    .login-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 100vh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .login-brand-panel {
+        min-height: auto;
+        padding: 23px 23px 26px;
+        border-radius: 0 0 24px 24px;
+    }
+
+    .login-brand-panel > .login-brand {
+        display: none;
+    }
+
+    .brand-message {
+        margin: 8px 0 0;
+    }
+
+    .brand-message .eyebrow {
+        font-size: 9px;
+    }
+
+    .brand-message h1 {
+        margin: 12px 0 10px;
+        font-size: 29px;
+        letter-spacing: -0.8px;
+    }
+
+    .brand-message > p {
+        font-size: 12px;
+        line-height: 1.7;
+    }
+
+    .care-highlights {
+        display: none;
+    }
+
+    .brand-panel-footer {
+        margin-top: 17px;
+        padding-top: 12px;
+        font-size: 9px;
+    }
+
+    .login-form-panel {
+        flex: 1;
+        padding: 18px 23px 22px;
+    }
+
+    .login-form-top {
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .mobile-brand {
+        display: inline-flex;
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .mobile-brand .brand-mark {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        border-radius: 10px;
+        font-size: 19px;
+    }
+
+    .language-selector {
+        gap: 5px;
+        font-size: 10px;
+    }
+
+    .language-selector select {
+        max-width: 100px;
+        padding: 7px 18px 7px 7px;
+        font-size: 11px;
+    }
+
+    .login-form-content {
+        margin: 15px auto;
+        padding: 22px 0;
+    }
+
+    .login-form-content h2 {
+        font-size: 28px;
+    }
+
+    .login-description {
+        margin-bottom: 25px;
+    }
+
+    .patient-welcome,
+    .patient-navigation,
+    .patient-content {
+        width: calc(100% - 28px);
+    }
+
+    .patient-welcome {
+        margin-top: 18px;
+        margin-bottom: 14px;
+        padding: 25px 20px;
+        border-radius: 17px;
+    }
+
+    .patient-welcome h1 {
+        font-size: 26px;
+    }
+
+    .patient-welcome p {
+        font-size: 12px;
+    }
+
+    .welcome-symbol {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+        border-radius: 17px;
+        font-size: 42px;
+    }
+
+    .welcome-dot {
+        right: 5px;
+        bottom: 5px;
+        width: 8px;
+        height: 8px;
+    }
+
+    .patient-navigation {
+        gap: 5px;
+        padding: 6px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+    }
+
+    .patient-nav-item {
+        min-height: 40px;
+        gap: 6px;
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    .nav-item-icon {
+        width: 19px;
+        height: 19px;
+        font-size: 14px;
+    }
+
+    .app-topbar {
+        align-items: flex-start;
+        padding: 13px 14px;
+        gap: 10px;
+    }
+
+    .app-topbar .brand-lockup {
+        gap: 8px;
+    }
+
+    .app-topbar .brand-mark {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        border-radius: 10px;
+        font-size: 20px;
+    }
+
+    .app-topbar .brand-copy strong {
+        font-size: 15px;
+    }
+
+    .app-topbar .brand-copy small {
+        max-width: 125px;
+        font-size: 9px;
+    }
+
+    .topbar-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .topbar-actions .language-selector label {
+        display: none;
+    }
+
+    .logout-button {
+        min-height: 34px;
+        gap: 5px;
+        padding: 7px 9px;
+        font-size: 11px;
+    }
+
+    .app-footer {
+        padding: 16px 18px;
+        font-size: 9px;
+    }
+
     .triage-page {
         padding: 20px 12px;
     }
@@ -145,10 +1215,21 @@ body {
     }
 
     .triage-container h1 {
-        font-size: 30px;
+        font-size: 28px;
     }
 
     .severity-options {
         flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

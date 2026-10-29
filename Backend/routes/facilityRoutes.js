@@ -1,3 +1,4 @@
+
 const express = require("express");
 
 const {
@@ -11,7 +12,6 @@ const authorize = require("../middlewares/roleMiddleware");
 
 const router = express.Router();
 
-
 // Patient: Find nearby facilities
 router.get(
     "/nearby",
@@ -19,7 +19,6 @@ router.get(
     authorize("patient"),
     getNearbyFacilities
 );
-
 
 // PHC Staff: Get PHC facility
 router.get(
@@ -29,12 +28,12 @@ router.get(
     getPHCFacility
 );
 
+// Admin, doctor and specialist: Get active facilities
 router.get(
     "/active",
     protect,
-    authorize("doctor", "specialist"),
+    authorize("admin", "doctor", "specialist"),
     getActiveFacilities
 );
-
 
 module.exports = router;

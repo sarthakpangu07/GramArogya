@@ -1,16 +1,38 @@
 const en = {
     app: {
-        name: "GramArogya"
+        title: "GramArogya",
+        subtitle: "Rural Healthcare Assistance"
     },
 
     common: {
-        home: "Home",
-        login: "Login",
-        logout: "Logout",
+        loading: "Loading...",
         submit: "Submit",
         cancel: "Cancel",
         save: "Save",
-        loading: "Loading..."
+        update: "Update",
+        delete: "Delete",
+        edit: "Edit",
+        back: "Back",
+        next: "Next",
+        yes: "Yes",
+        no: "No",
+        search: "Search",
+        logout: "Logout",
+        login: "Login",
+        register: "Register",
+        name: "Name",
+        email: "Email",
+        password: "Password",
+        phone: "Phone Number",
+        address: "Address",
+        status: "Status",
+        actions: "Actions",
+        success: "Success",
+        error: "Error",
+        close: "Close",
+        noData: "No data available",
+        notAvailable: "Not available",
+        unknown: "Unknown"
     },
 
     language: {
@@ -22,410 +44,333 @@ const en = {
 
     patient: {
         dashboard: "Patient Dashboard",
-        healthCheck: "Health Check",
-        facilityFinder: "Find Healthcare Facility",
+        welcome: "Welcome to GramArogya",
+        profile: "My Profile",
+        symptoms: "Report Symptoms",
+        triage: "Symptom Triage",
+        facilities: "Find Healthcare Facilities",
         healthRecords: "My Health Records",
-        teleconsultations: "Teleconsultations",
-        appointments: "Appointments",
-        referrals: "Referrals",
-        followUps: "Follow-ups",
-        schemes: "Government Schemes",
-        emergency: "Emergency Help"
+        teleconsultation: "Teleconsultation",
+        referrals: "My Referrals",
+        governmentSchemes: "Government Schemes",
+        emergency: "Emergency Assistance",
+        followUps: "Follow-up Reminders"
     },
 
     triage: {
-        title: "Health Check",
-        subtitle:
-            "Tell us about your symptoms to understand how urgently you may need healthcare.",
-        safetyNote:
-            "This is not a medical diagnosis. If you are experiencing a serious emergency, seek immediate medical help.",
-
-        symptomsQuestion:
-            "What symptoms are you experiencing?",
-
-        durationQuestion:
-            "How long have you had these symptoms?",
-
-        durationPlaceholder:
-            "Example: 2 days",
-
-        severityQuestion:
-            "How severe do you feel your symptoms are?",
-
-        existingConditions:
-            "Existing medical conditions",
-
-        conditionsPlaceholder:
-            "Example: Diabetes, Asthma (optional)",
-
-        conditionsHelp:
-            "Separate multiple conditions with commas.",
-
-        checkUrgency:
-            "Check My Urgency",
-
-        checking:
-            "Checking...",
-
-        result:
-            "Triage Result",
-
-        urgency:
-            "Urgency",
-
-        recommendedAction:
-            "Recommended Action",
-
-        doctorReview:
-            "Doctor Review",
-
-        required:
-            "Required",
-
-        notRequired:
-            "Not required",
-
-        resultNote:
-            "This result is an urgency recommendation, not a medical diagnosis."
+        title: "AI-Assisted Symptom Triage",
+        subtitle: "Describe your symptoms to receive guidance on the next step.",
+        symptoms: "Describe Your Symptoms",
+        symptomsPlaceholder: "Enter the symptoms you are experiencing",
+        duration: "Duration",
+        durationPlaceholder: "e.g. 2 days",
+        submit: "Check Symptoms",
+        submitting: "Checking Symptoms...",
+        result: "Triage Result",
+        urgency: "Urgency",
+        recommendedAction: "Recommended Action",
+        disclaimer: "This tool provides guidance only. It does not diagnose diseases or prescribe treatment.",
+        emergency: "Emergency",
+        urgent: "Urgent",
+        routine: "Routine",
+        humanReview: "Human Review Required",
+        error: "Unable to process your symptoms. Please try again.",
+        loginRequired: "Please login first.",
+        symptomsRequired: "Please enter your symptoms."
     },
 
     severity: {
-        mild: "Mild",
+        low: "Low",
         moderate: "Moderate",
-        severe: "Severe"
+        high: "High",
+        critical: "Critical",
+        emergency: "Emergency",
+        urgent: "Urgent",
+        routine: "Routine",
+        unknown: "Unknown"
     },
 
     symptoms: {
         fever: "Fever",
         cough: "Cough",
-        cold: "Cold",
         headache: "Headache",
-        bodyPain: "Body Pain",
-        weakness: "Weakness",
-        breathingDifficulty: "Breathing Difficulty",
         chestPain: "Chest Pain",
+        breathingDifficulty: "Difficulty Breathing",
+        dizziness: "Dizziness",
         vomiting: "Vomiting",
-        diarrhea: "Diarrhea"
+        abdominalPain: "Abdominal Pain",
+        weakness: "Weakness",
+        other: "Other Symptoms"
     },
 
     facility: {
-        title: "Find Nearby Healthcare Facilities",
-
-        subtitle:
-            "Find nearby government healthcare facilities based on your current location.",
-
-        findButton: "Find Nearby Facilities",
-        finding: "Finding facilities...",
-
-        type: "Type",
-        address: "Address",
+        title: "Find Healthcare Facilities",
+        subtitle: "Find nearby government healthcare facilities.",
+        search: "Search Facilities",
+        searchPlaceholder: "Enter village, town, or area",
+        nearest: "Nearest Healthcare Facilities",
+        name: "Facility Name",
+        type: "Facility Type",
         distance: "Distance",
-        services: "Services",
-
-        select: "Select This Facility",
-
-        loginRequired:
-            "Please login first.",
-
-        triageRequired:
-            "Please complete a triage check first.",
-
-        locationNotSupported:
-            "Location is not supported by your browser.",
-
-        locationAccessDenied:
-            "Unable to access your location. Please allow location access.",
-
-        triageFetchFailed:
-            "Failed to fetch triage record.",
-
-        facilityFetchFailed:
-            "Failed to find facilities.",
-
-        visitRequestFailed:
-            "Failed to send visit request.",
-
-        visitRequestSuccess:
-            "Visit request sent successfully!"
+        location: "Location",
+        contact: "Contact",
+        directions: "Get Directions",
+        noFacilities: "No healthcare facilities found.",
+        loading: "Finding healthcare facilities...",
+        error: "Unable to fetch healthcare facilities.",
+        requestVisit: "Request PHC Visit",
+        requesting: "Submitting Request...",
+        requestSuccess: "Visit request submitted successfully.",
+        requestError: "Failed to submit visit request.",
+        loginRequired: "Please login first.",
+        governmentPHC: "Government PHC",
+        healthCentre: "Health Centre"
     },
 
     healthRecords: {
-        title: "My Health Records",
-
-        loading:
-            "Loading health records...",
-
-        noRecords:
-            "No health records found.",
-
-        healthRecord:
-            "Health Record",
-
-        date:
-            "Date",
-
-        symptomsTriage:
-            "Symptoms & Triage",
-
-        symptoms:
-            "Symptoms",
-
-        duration:
-            "Duration",
-
-        severity:
-            "Severity",
-
-        urgency:
-            "Urgency",
-
-        recommendedAction:
-            "Recommended Action",
-
-        phcVitals:
-            "PHC Vitals",
-
-        temperature:
-            "Temperature",
-
-        oxygenLevel:
-            "Oxygen Level",
-
-        pulseRate:
-            "Pulse Rate",
-
-        bloodPressure:
-            "Blood Pressure",
-
-        phcNotes:
-            "PHC Notes",
-
-        noNotes:
-            "No notes",
-
-        vitalsNotRecorded:
-            "PHC vitals not recorded yet.",
-
-        healthcareFacility:
-            "Healthcare Facility",
-
-        name:
-            "Name",
-
-        type:
-            "Type",
-
-        village:
-            "Village",
-
-        district:
-            "District",
-
-        visitStatus:
-            "Visit Status",
-
-        facilityNotSelected:
-            "Healthcare facility has not been selected yet.",
-
-        doctorConsultation:
-            "Doctor Consultation",
-
-        doctor:
-            "Doctor",
-
-        assessment:
-            "Assessment",
-
-        decision:
-            "Decision",
-
-        prescription:
-            "Prescription",
-
-        referralReason:
-            "Referral Reason",
-
-        doctorNotes:
-            "Doctor Notes",
-
-        consultationNotCompleted:
-            "Doctor consultation not completed yet.",
-
-        fetchFailed:
-            "Failed to fetch health records.",
-
-        values: {
-            emergency: "Emergency",
-            urgent: "Urgent",
-            humanReview: "Human Review",
-            routine: "Routine",
-
-            emergencyHelp:
-                "Seek Emergency Help",
-
-            urgentPhc:
-                "Visit PHC Urgently",
-
-            phcVisit:
-                "Visit PHC",
-
-            telemedicine:
-                "Telemedicine Consultation",
-
-            doctorConsultation:
-                "Doctor Consultation",
-
-            routineAction:
-                "Routine Healthcare"
-        }
+        title: "My Digital Health Records",
+        subtitle: "View your medical history and consultation records.",
+        loading: "Loading health records...",
+        noRecords: "No health records found.",
+        error: "Failed to fetch health records.",
+        symptoms: "Symptoms",
+        diagnosis: "Doctor's Assessment",
+        treatment: "Treatment",
+        prescription: "Prescription",
+        referral: "Referral",
+        doctor: "Doctor",
+        date: "Date",
+        notes: "Notes",
+        vitals: "Vitals",
+        temperature: "Temperature",
+        pulse: "Pulse Rate",
+        oxygen: "Oxygen Level",
+        bloodPressure: "Blood Pressure",
+        followUp: "Follow-up",
+        status: "Status",
+        notProvided: "Not provided",
+        loginRequired: "Please login first."
     },
 
     teleconsultation: {
-        title:
-            "Teleconsultations",
-
-        myTitle:
-            "My Teleconsultations",
-
-        loading:
-            "Loading your consultations...",
-
-        subtitle:
-            "View your scheduled online doctor consultations.",
-
-        noConsultations:
-            "No Teleconsultations",
-
-        noConsultationsMessage:
-            "You currently have no scheduled teleconsultations.",
-
-        doctor:
-            "Doctor",
-
-        doctorFallback:
-            "Doctor",
-
-        dateTime:
-            "Date & Time",
-
-        status:
-            "Status",
-
-        visitStatus:
-            "Visit Status",
-
-        join:
-            "Join Consultation",
-
-        completedMessage:
-            "This consultation has been completed.",
-
-        cancelledMessage:
-            "This consultation has been cancelled.",
-
-        fetchFailed:
-            "Failed to fetch teleconsultations.",
-
-        values: {
-            scheduled:
-                "Scheduled",
-
-            ongoing:
-                "Ongoing",
-
-            completed:
-                "Completed",
-
-            cancelled:
-                "Cancelled"
-        },
-
-        visitStatuses: {
-            pending:
-                "Pending",
-
-            accepted:
-                "Accepted",
-
-            rejected:
-                "Rejected",
-
-            completed:
-                "Completed",
-
-            cancelled:
-                "Cancelled"
-        }
+        title: "Teleconsultation",
+        subtitle: "Connect with a doctor remotely.",
+        request: "Request Teleconsultation",
+        requesting: "Submitting Request...",
+        reason: "Reason for Consultation",
+        reasonPlaceholder: "Describe why you need a consultation",
+        preferredTime: "Preferred Time",
+        status: "Consultation Status",
+        doctor: "Doctor",
+        date: "Date",
+        noConsultations: "No teleconsultations found.",
+        loading: "Loading teleconsultations...",
+        error: "Failed to fetch teleconsultations.",
+        requestSuccess: "Teleconsultation requested successfully.",
+        requestError: "Failed to request teleconsultation.",
+        loginRequired: "Please login first.",
+        reasonRequired: "Please enter the reason for consultation."
     },
 
     messages: {
-        selectSymptom:
-            "Please select at least one symptom.",
+        loginSuccess: "Login successful.",
+        loginFailed: "Login failed. Please check your credentials.",
+        registerSuccess: "Registration successful.",
+        registerFailed: "Registration failed.",
+        logoutSuccess: "Logged out successfully.",
+        unauthorized: "You are not authorized to access this page.",
+        serverError: "Something went wrong. Please try again.",
+        networkError: "Network error. Please check your connection."
+    },
 
-        selectSeverity:
-            "Please select the severity of your symptoms.",
+    governmentSchemes: {
+        title: "Government Healthcare Schemes",
+        subtitle: "Explore healthcare schemes that may be relevant to you.",
+        loading: "Loading government schemes...",
+        noSchemes: "No government schemes available.",
+        error: "Failed to fetch government schemes.",
+        name: "Scheme Name",
+        description: "Description",
+        eligibility: "Eligibility",
+        benefits: "Benefits",
+        documents: "Required Documents",
+        application: "How to Apply",
+        officialLink: "Official Website",
+        search: "Search Schemes",
+        searchPlaceholder: "Search by scheme name or keyword",
+        loginRequired: "Please login first."
+    },
 
-        loginRequired:
-            "Please login first to use the health check.",
+    doctorDashboard: {
+        title: "Doctor Dashboard",
+        subtitle: "Review patients, consultations, and follow-up requests.",
 
-        requestFailed:
-            "Triage request failed."
+        loginRequired: "Please login first.",
+        accessDenied: "Access denied. Doctor access is required.",
+        fetchFailed: "Failed to fetch dashboard data.",
+        updateFailed: "Failed to update the record.",
+        updateSuccess: "Record updated successfully.",
+
+        teleconsultations: "Teleconsultations",
+        loadingTeleconsultations: "Loading teleconsultations...",
+        noTeleconsultations: "No teleconsultations found.",
+        patient: "Patient",
+        reason: "Reason",
+        preferredTime: "Preferred Time",
+        consultationStatus: "Consultation Status",
+        accept: "Accept",
+        accepting: "Accepting...",
+        startConsultation: "Start Consultation",
+        completeConsultation: "Complete Consultation",
+
+        followUps: "Follow-up Requests",
+        loadingFollowUps: "Loading follow-up requests...",
+        noFollowUps: "No follow-up requests found.",
+        followUpDate: "Follow-up Date",
+        followUpNotes: "Follow-up Notes",
+
+        patientReview: "Patient Review",
+        loadingPatients: "Loading patients...",
+        noPatients: "No patients available for review.",
+        patientDetails: "Patient Details",
+        symptoms: "Symptoms",
+        urgency: "Urgency",
+        recommendedAction: "Recommended Action",
+        triageResult: "Triage Result",
+
+        vitals: "Patient Vitals",
+        temperature: "Temperature",
+        oxygenLevel: "Oxygen Level",
+        pulseRate: "Pulse Rate",
+        bloodPressure: "Blood Pressure",
+        notes: "Notes",
+        notProvided: "Not provided",
+
+        consultation: "Consultation",
+        assessment: "Doctor's Assessment",
+        assessmentPlaceholder: "Enter your clinical assessment",
+        treatment: "Treatment Plan",
+        treatmentPlaceholder: "Enter the recommended treatment plan",
+        prescription: "Prescription",
+        prescriptionPlaceholder: "Enter prescription details",
+        doctorNotes: "Doctor's Notes",
+        doctorNotesPlaceholder: "Enter additional consultation notes",
+        saveConsultation: "Save Consultation",
+        savingConsultation: "Saving Consultation...",
+        consultationSuccess: "Consultation saved successfully.",
+        consultationFailed: "Failed to save consultation.",
+
+        referral: "Referral",
+        referPatient: "Refer Patient",
+        referralReason: "Reason for Referral",
+        referralReasonPlaceholder: "Enter the reason for referral",
+        specialist: "Specialist",
+        selectSpecialist: "Select Specialist",
+        referralSuccess: "Referral created successfully.",
+        referralFailed: "Failed to create referral.",
+
+        status: "Status",
+        date: "Date",
+        actions: "Actions",
+        viewDetails: "View Details",
+        noData: "No data available",
+        unknown: "Unknown"
+    },
+
+    phcDashboard: {
+        title: "PHC Dashboard",
+        subtitle: "Manage patient visit requests and review triage information.",
+
+        loginRequired: "Please login first.",
+        fetchFacilityFailed: "Failed to fetch facility.",
+        noFacilityFound: "No healthcare facility found.",
+        facilityNotFound: "Healthcare facility not found.",
+        fetchPendingFailed: "Failed to fetch pending requests.",
+        fetchAcceptedFailed: "Failed to fetch accepted patients.",
+        acceptRequestFailed: "Failed to accept request.",
+        requestAccepted: "Patient request accepted successfully!",
+        triageRecordNotFound: "Triage record not found.",
+        vitalsRequired: "Please enter temperature, oxygen level, and pulse rate.",
+        recordVitalsFailed: "Failed to record vitals.",
+        vitalsRecorded: "Patient vitals recorded successfully!",
+        fetchEmergencyFailed: "Failed to fetch emergency requests.",
+        updateEmergencyFailed: "Failed to update emergency status.",
+        emergencyStatusUpdated: "Emergency status updated to {{status}}.",
+
+        loadingRequests: "Loading requests...",
+        viewPendingRequests: "View Pending Requests",
+        loadingPatients: "Loading patients...",
+        viewAcceptedPatients: "View Accepted Patients",
+        loadingEmergencyRequests: "Loading emergency requests...",
+        viewEmergencyRequests: "View Emergency Requests",
+
+        pendingPatientRequests: "Pending Patient Requests",
+        patientLabel: "Patient",
+        email: "Email",
+        symptoms: "Symptoms",
+        duration: "Duration",
+        severity: "Severity",
+        urgency: "Urgency",
+        recommendedAction: "Recommended Action",
+        status: "Status",
+        accepting: "Accepting...",
+        acceptPatient: "Accept Patient",
+        unknown: "Unknown",
+        notAvailable: "Not available",
+
+        acceptedPatients: "Accepted Patients",
+        vitalsRecordedHeading: "Vitals Recorded",
+        temperature: "Temperature",
+        oxygenLevel: "Oxygen Level",
+        pulseRate: "Pulse Rate",
+        bloodPressure: "Blood Pressure",
+        notProvided: "Not provided",
+        notes: "Notes",
+        noNotes: "No notes",
+
+        recordPatientVitals: "Record Patient Vitals",
+        temperaturePlaceholder: "e.g. 98.6",
+        oxygenLevelWithUnit: "Oxygen Level (SpO₂)",
+        oxygenPlaceholder: "e.g. 97",
+        pulsePlaceholder: "e.g. 80",
+        bloodPressurePlaceholder: "e.g. 120/80",
+        notesPlaceholder: "Enter additional observations",
+        savingVitals: "Saving Vitals...",
+        saveVitals: "Save Vitals",
+
+        emergencyRequests: "Emergency Requests",
+        emergencyReason: "Emergency Reason",
+        facility: "Facility",
+        notAssigned: "Not assigned",
+        ambulance: "Ambulance",
+        ambulanceRequested: "Requested",
+        notRequested: "Not requested",
+        emergencyGuidance: "Emergency Guidance",
+        updating: "Updating...",
+        startEmergencyResponse: "Start Emergency Response",
+        markCompleted: "Mark Completed",
+        noPendingEmergency: "No pending emergency requests."
     },
 
     emergency: {
-        title:
-            "Emergency Help",
-
-        warning:
-            "If you are experiencing a serious medical emergency, seek immediate medical assistance. Do not delay emergency care.",
-
-        whatHappening:
-            "What is happening?",
-
-        reasonPlaceholder:
-            "Describe the emergency briefly...",
-
-        ambulanceAssistance:
-            "Request emergency ambulance assistance",
-
-        loginRequired:
-            "Please login first.",
-
-        reasonRequired:
-            "Please describe the emergency before requesting help.",
-
-        requestFailed:
-            "Failed to create emergency request.",
-
-        requesting:
-            "Requesting Emergency Help...",
-
-        requestButton:
-            "REQUEST EMERGENCY HELP",
-
-        requestCreated:
-            "Emergency Request Created",
-
-        status:
-            "Status",
-
-        reason:
-            "Reason",
-
-        nearestFacility:
-            "Nearest Healthcare Facility",
-
-        phone:
-            "Phone",
-
-        ambulanceRequest:
-            "Ambulance request:",
-
-        requested:
-            "Requested",
-
-        guidance:
-            "Emergency Guidance"
+        title: "Emergency Assistance",
+        warning: "If this is a life-threatening emergency, seek immediate medical help.",
+        whatHappening: "What is happening?",
+        reasonPlaceholder: "Describe the emergency",
+        ambulanceAssistance: "Request ambulance assistance",
+        loginRequired: "Please login first.",
+        reasonRequired: "Please describe the emergency.",
+        requestFailed: "Failed to submit emergency request.",
+        requesting: "Requesting assistance...",
+        requestButton: "Request Emergency Assistance",
+        requestCreated: "Emergency request submitted successfully.",
+        status: "Status",
+        reason: "Emergency Reason",
+        nearestFacility: "Nearest Healthcare Facility",
+        phone: "Phone",
+        ambulanceRequest: "Ambulance Request",
+        requested: "Requested",
+        guidance: "Please follow the emergency guidance provided by healthcare professionals."
     }
 };
 

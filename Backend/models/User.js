@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -23,8 +24,20 @@ const userSchema = new mongoose.Schema(
 
         role: {
             type: String,
-            enum: ["patient", "phc_staff", "doctor", "specialist", "admin"],
+            enum: [
+                "patient",
+                "phc_staff",
+                "doctor",
+                "specialist",
+                "admin"
+            ],
             default: "patient"
+        },
+
+        assignedFacility: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Facility",
+            default: null
         }
     },
     {

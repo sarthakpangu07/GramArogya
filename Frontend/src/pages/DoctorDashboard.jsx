@@ -1,12 +1,20 @@
-import React, { useState } from "react";
+
+import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "../components/LanguageSelector";
+import "./DoctorDashboard.css";
+
+const API_URL = "https://gramarogya-27q3.onrender.com/api";
 
 const DoctorDashboard = () => {
+    const { t, i18n } = useTranslation();
+
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
 
     const [selectedPatient, setSelectedPatient] = useState(null);
-
     const [assessment, setAssessment] = useState("");
     const [decision, setDecision] = useState("treatment");
     const [prescription, setPrescription] = useState("");
@@ -16,452 +24,534 @@ const DoctorDashboard = () => {
     const [facilities, setFacilities] = useState([]);
     const [selectedFacility, setSelectedFacility] = useState("");
     const [loadingFacilities, setLoadingFacilities] = useState(false);
-
     const [saving, setSaving] = useState(false);
-
-    // --------------------------------
-    // TELECONSULTATION STATES
-    // --------------------------------
 
     const [teleconsultations, setTeleconsultations] = useState([]);
     const [loadingTeleconsultations, setLoadingTeleconsultations] =
         useState(false);
 
-    // --------------------------------
-    // FOLLOW-UP STATES
-    // --------------------------------
-
     const [followUps, setFollowUps] = useState([]);
     const [loadingFollowUps, setLoadingFollowUps] = useState(false);
-
     const [followUpDate, setFollowUpDate] = useState("");
     const [followUpReason, setFollowUpReason] = useState("");
     const [followUpNotes, setFollowUpNotes] = useState("");
-
     const [creatingFollowUp, setCreatingFollowUp] = useState(false);
+    const [updatingFollowUpId, setUpdatingFollowUpId] = useState("");
 
-    // --------------------------------
-    // FETCH PATIENTS
-    // --------------------------------
+    const tr = useCallback(
+        (key, fallback) => t(key, { defaultValue: fallback }),
+        [t]
+    );
 
-    const fetchPatients = async () => {
+    const token = () => localStorage.getItem("token");
+
+    const readResponse = async (response) =>
+        response.json().catch(() => ({}));
+
+    const getErrorMessage = (data, fallback) =>
+        data.message || fallback;
+
+    const clearMessages = () => {
         setError("");
+        setNotice("");
+    };
+
+    // Fetch patients awaiting doctor review
+    const fetchPatients = async () => {
+        clearMessages();
         setLoading(true);
 
-        const token = localStorage.getItem("token");
+        const authToken = token();
 
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             setLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/visits/doctor-patients",
+                `${API_URL}/visits/doctor-patients`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${authToken}`
                     }
                 }
             );
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Failed to fetch patients."
+                    getErrorMessage(
+                        data,
+                        tr("doctorDashboard.fetchPatientsFailed", "Failed to fetch patients.")
+                    )
                 );
             }
 
-            setPatients(data.visitRequests || []);
-        } catch (error) {
-            setError(error.message);
+            setPatients(
+                Array.isArray(data.visitRequests)
+                    ? data.visitRequests
+                    : []
+            );
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
-    // --------------------------------
-    // FETCH ACTIVE FACILITIES
-    // --------------------------------
-
+    // Fetch active healthcare facilities
     const fetchFacilities = async () => {
-        setError("");
         setLoadingFacilities(true);
 
-        const token = localStorage.getItem("token");
+        const authToken = token();
 
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             setLoadingFacilities(false);
             return;
         }
 
         try {
             const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/facilities/active",
+                `${API_URL}/facilities/active`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${authToken}`
                     }
                 }
             );
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Failed to fetch facilities."
+                    getErrorMessage(
+                        data,
+                        tr("doctorDashboard.fetchFacilitiesFailed", "Failed to fetch facilities.")
+                    )
                 );
             }
 
-            setFacilities(data.facilities || []);
-        } catch (error) {
-            setError(error.message);
+            setFacilities(
+                Array.isArray(data.facilities) ? data.facilities : []
+            );
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoadingFacilities(false);
         }
     };
 
-    // --------------------------------
-    // FETCH TELECONSULTATIONS
-    // --------------------------------
-
+    // Fetch doctor's teleconsultations
     const fetchTeleconsultations = async () => {
-        setError("");
+        clearMessages();
         setLoadingTeleconsultations(true);
 
-        const token = localStorage.getItem("token");
+        const authToken = token();
 
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             setLoadingTeleconsultations(false);
             return;
         }
 
         try {
             const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/teleconsultations/doctor",
+                `${API_URL}/teleconsultations/doctor`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${authToken}`
                     }
                 }
             );
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message ||
-                        "Failed to fetch teleconsultations."
+                    getErrorMessage(
+                        data,
+                        tr(
+                            "doctorDashboard.fetchTeleconsultationsFailed",
+                            "Failed to fetch teleconsultations."
+                        )
+                    )
                 );
             }
 
             setTeleconsultations(
-                data.teleconsultations || []
+                Array.isArray(data.teleconsultations)
+                    ? data.teleconsultations
+                    : []
             );
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoadingTeleconsultations(false);
         }
     };
 
-    // --------------------------------
-    // CREATE FOLLOW-UP
-    // --------------------------------
+    // Fetch doctor's follow-ups
+    const fetchFollowUps = async () => {
+        clearMessages();
+        setLoadingFollowUps(true);
 
-    const createFollowUp = async () => {
-        setError("");
+        const authToken = token();
 
-        const token = localStorage.getItem("token");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
+            setLoadingFollowUps(false);
+            return;
+        }
 
-        if (!token) {
-            setError("Please login first.");
+        try {
+            const response = await fetch(
+                `${API_URL}/follow-ups/doctor`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`
+                    }
+                }
+            );
+
+            const data = await readResponse(response);
+
+            if (!response.ok) {
+                throw new Error(
+                    getErrorMessage(
+                        data,
+                        tr("doctorDashboard.fetchFollowUpsFailed", "Failed to fetch follow-ups.")
+                    )
+                );
+            }
+
+            setFollowUps(
+                Array.isArray(data.followUps) ? data.followUps : []
+            );
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoadingFollowUps(false);
+        }
+    };
+
+    // Open the selected patient consultation form
+    const openConsultation = async (patient) => {
+        setSelectedPatient(patient);
+        setAssessment("");
+        setDecision("treatment");
+        setPrescription("");
+        setReferralReason("");
+        setSelectedFacility("");
+        setDoctorNotes("");
+        setFollowUpDate("");
+        setFollowUpReason("");
+        setFollowUpNotes("");
+        clearMessages();
+
+        await fetchFacilities();
+    };
+
+    // Close the consultation editor
+    const closeConsultation = () => {
+        setSelectedPatient(null);
+        setAssessment("");
+        setDecision("treatment");
+        setPrescription("");
+        setReferralReason("");
+        setSelectedFacility("");
+        setDoctorNotes("");
+        setFollowUpDate("");
+        setFollowUpReason("");
+        setFollowUpNotes("");
+        clearMessages();
+    };
+
+    // Create a follow-up for the currently selected patient
+    const createFollowUp = async (event) => {
+        event.preventDefault();
+        clearMessages();
+
+        const authToken = token();
+
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             return;
         }
 
         if (!selectedPatient) {
-            setError("Please select a patient.");
+            setError(tr("doctorDashboard.selectPatient", "Please select a patient first."));
             return;
         }
 
         if (!followUpDate) {
-            setError("Please select a follow-up date and time.");
+            setError(tr("doctorDashboard.followUpDateRequired", "Follow-up date is required."));
             return;
         }
 
         if (!followUpReason.trim()) {
-            setError("Please enter the follow-up reason.");
+            setError(tr("doctorDashboard.followUpReasonRequired", "Follow-up reason is required."));
+            return;
+        }
+
+        const parsedDate = new Date(followUpDate);
+
+        if (Number.isNaN(parsedDate.getTime()) || parsedDate <= new Date()) {
+            setError(
+                tr(
+                    "doctorDashboard.followUpDateFuture",
+                    "Please select a future follow-up date and time."
+                )
+            );
             return;
         }
 
         setCreatingFollowUp(true);
 
         try {
-            const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/follow-ups",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        visitRequestId: selectedPatient._id,
-                        followUpDate: new Date(
-                            followUpDate
-                        ).toISOString(),
-                        reason: followUpReason.trim(),
-                        notes: followUpNotes.trim()
-                    })
-                }
-            );
+            const response = await fetch(`${API_URL}/follow-ups`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`
+                },
+                body: JSON.stringify({
+                    visitRequestId: selectedPatient._id,
+                    followUpDate: parsedDate.toISOString(),
+                    reason: followUpReason.trim(),
+                    notes: followUpNotes.trim()
+                })
+            });
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message ||
-                        "Failed to create follow-up."
+                    getErrorMessage(
+                        data,
+                        tr("doctorDashboard.createFollowUpFailed", "Failed to create follow-up.")
+                    )
                 );
             }
 
-            setFollowUps((currentFollowUps) => [
-                data.followUp,
-                ...currentFollowUps
-            ]);
+            if (data.followUp) {
+                setFollowUps((current) => [data.followUp, ...current]);
+            }
 
             setFollowUpDate("");
             setFollowUpReason("");
             setFollowUpNotes("");
-
-            alert("Follow-up created successfully!");
-
-        } catch (error) {
-            setError(error.message);
+            setNotice(
+                tr(
+                    "doctorDashboard.followUpCreated",
+                    "Follow-up created successfully."
+                )
+            );
+        } catch (err) {
+            setError(err.message);
         } finally {
             setCreatingFollowUp(false);
         }
     };
 
-    // --------------------------------
-    // UPDATE FOLLOW-UP STATUS
-    // --------------------------------
+    // Update a follow-up status
+    const updateFollowUpStatus = async (followUpId, status) => {
+        clearMessages();
 
-    const updateFollowUpStatus = async (
-        followUpId,
-        status
-    ) => {
-        const token = localStorage.getItem("token");
+        const authToken = token();
 
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             return;
         }
 
-        try {
-            setError("");
+        setUpdatingFollowUpId(followUpId);
 
+        try {
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/follow-ups/${followUpId}/status`,
+                `${API_URL}/follow-ups/${followUpId}/status`,
                 {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({
-                        status
-                    })
+                    body: JSON.stringify({ status })
                 }
             );
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message ||
-                        "Failed to update follow-up status."
+                    getErrorMessage(
+                        data,
+                        tr("doctorDashboard.updateFollowUpFailed", "Failed to update follow-up.")
+                    )
                 );
             }
 
-            setFollowUps((currentFollowUps) =>
-                currentFollowUps.map((followUp) =>
+            setFollowUps((current) =>
+                current.map((followUp) =>
                     followUp._id === followUpId
-                        ? {
-                              ...followUp,
-                              status
-                          }
+                        ? { ...followUp, status }
                         : followUp
                 )
             );
 
-        } catch (error) {
-            setError(error.message);
-        }
-    };
-
-    // --------------------------------
-    // FETCH DOCTOR FOLLOW-UPS
-    // --------------------------------
-
-    const fetchFollowUps = async () => {
-        setError("");
-        setLoadingFollowUps(true);
-
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            setError("Please login first.");
-            setLoadingFollowUps(false);
-            return;
-        }
-
-        try {
-            const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/follow-ups/doctor",
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
+            setNotice(
+                tr(
+                    "doctorDashboard.followUpStatusUpdated",
+                    "Follow-up status updated."
+                )
             );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to fetch follow-ups."
-                );
-            }
-
-            setFollowUps(data.followUps || []);
-
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setError(err.message);
         } finally {
-            setLoadingFollowUps(false);
+            setUpdatingFollowUpId("");
         }
     };
 
-    // --------------------------------
-    // UPDATE TELECONSULTATION STATUS
-    // --------------------------------
+    // Update teleconsultation status
+    const updateTeleconsultationStatus = async (consultationId, status) => {
+        const authToken = token();
 
-    const updateTeleconsultationStatus = async (
-        consultationId,
-        status
-    ) => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             return false;
         }
 
         try {
-            setError("");
+            clearMessages();
 
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/teleconsultations/${consultationId}/status`,
+                `${API_URL}/teleconsultations/${consultationId}/status`,
                 {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
+                        Authorization: `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({
-                        status
-                    })
+                    body: JSON.stringify({ status })
                 }
             );
 
-            const data = await response.json();
+            const data = await readResponse(response);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message ||
-                        "Failed to update consultation status."
+                    getErrorMessage(
+                        data,
+                        tr(
+                            "doctorDashboard.updateConsultationFailed",
+                            "Failed to update consultation."
+                        )
+                    )
                 );
             }
 
             setTeleconsultations((current) =>
                 current.map((consultation) =>
                     consultation._id === consultationId
-                        ? {
-                              ...consultation,
-                              status
-                          }
+                        ? { ...consultation, status }
                         : consultation
                 )
             );
 
             return true;
-
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setError(err.message);
             return false;
         }
     };
 
-    // --------------------------------
-    // START TELECONSULTATION
-    // --------------------------------
-
-    const startTeleconsultation = async (
-        consultation
-    ) => {
-        const success =
-            await updateTeleconsultationStatus(
-                consultation._id,
-                "ongoing"
+    const openMeetingLink = (meetingLink) => {
+        if (!meetingLink) {
+            setError(
+                tr(
+                    "doctorDashboard.meetingLinkUnavailable",
+                    "A meeting link is not available."
+                )
             );
+            return false;
+        }
 
-        if (success) {
-            window.open(
-                consultation.meetingLink,
-                "_blank"
+        try {
+            const url = new URL(meetingLink);
+
+            if (!["https:", "http:"].includes(url.protocol)) {
+                throw new Error("Invalid meeting link");
+            }
+
+            window.open(url.href, "_blank", "noopener,noreferrer");
+            return true;
+        } catch {
+            setError(
+                tr(
+                    "doctorDashboard.invalidMeetingLink",
+                    "The meeting link is not valid."
+                )
             );
+            return false;
         }
     };
 
-    // --------------------------------
-    // JOIN ONGOING TELECONSULTATION
-    // --------------------------------
+    const startTeleconsultation = async (consultation) => {
+        if (!consultation.meetingLink) {
+            setError(
+                tr(
+                    "doctorDashboard.meetingLinkUnavailable",
+                    "A meeting link is not available."
+                )
+            );
+            return;
+        }
 
-    const joinTeleconsultation = (
-        consultation
-    ) => {
-        window.open(
-            consultation.meetingLink,
-            "_blank"
+        const success = await updateTeleconsultationStatus(
+            consultation._id,
+            "ongoing"
         );
+
+        if (success) {
+            openMeetingLink(consultation.meetingLink);
+        }
     };
 
-    // --------------------------------
-    // COMPLETE TELECONSULTATION
-    // --------------------------------
+    const joinTeleconsultation = (consultation) => {
+        openMeetingLink(consultation.meetingLink);
+    };
 
-    const completeTeleconsultation = async (
-        consultation
-    ) => {
+    const completeTeleconsultation = async (consultation) => {
         await updateTeleconsultationStatus(
             consultation._id,
             "completed"
         );
     };
 
-    // --------------------------------
-    // FORMAT DATE
-    // --------------------------------
+    const formatDate = (dateValue) => {
+        if (!dateValue) {
+            return tr("doctorDashboard.notAvailable", "Not available");
+        }
 
-    const formatDate = (date) => {
-        return new Date(date).toLocaleString(
-            "en-IN",
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) {
+            return tr("doctorDashboard.notAvailable", "Not available");
+        }
+
+        const localeMap = {
+            en: "en-IN",
+            mr: "mr-IN",
+            hi: "hi-IN"
+        };
+
+        const language = i18n.language?.split("-")[0];
+
+        return date.toLocaleString(
+            localeMap[language] || "en-IN",
             {
                 dateStyle: "medium",
                 timeStyle: "short"
@@ -469,1238 +559,1400 @@ const DoctorDashboard = () => {
         );
     };
 
-    // --------------------------------
-    // OPEN CONSULTATION
-    // --------------------------------
+    const humanize = (value) =>
+        String(value || "")
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
 
-    const openConsultation = async (patient) => {
-        setSelectedPatient(patient);
+    const statusClass = (status) =>
+        `doctor-status-${String(status || "unknown")
+            .toLowerCase()
+            .replace(/[^a-z0-9-]/g, "-")}`;
 
-        setAssessment("");
-        setDecision("treatment");
-        setPrescription("");
-        setReferralReason("");
-        setSelectedFacility("");
-        setDoctorNotes("");
+    const handleSaveConsultation = async () => {
+        clearMessages();
 
-        setError("");
+        const authToken = token();
 
-        await fetchFacilities();
-    };
-
-    // --------------------------------
-    // CLOSE CONSULTATION
-    // --------------------------------
-
-    const closeConsultation = () => {
-        setSelectedPatient(null);
-
-        setAssessment("");
-        setDecision("treatment");
-        setPrescription("");
-        setReferralReason("");
-        setSelectedFacility("");
-        setDoctorNotes("");
-
-        setError("");
-    };
-
-    // --------------------------------
-    // SAVE CONSULTATION
-    // --------------------------------
-
-    const saveConsultation = async () => {
-        setError("");
-
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            setError("Please login first.");
+        if (!authToken) {
+            setError(tr("doctorDashboard.loginRequired", "Please log in to continue."));
             return;
         }
 
         if (!selectedPatient) {
-            setError("Please select a patient.");
+            setError(tr("doctorDashboard.selectPatient", "Please select a patient."));
             return;
         }
 
         if (!assessment.trim()) {
+            setError(tr("doctorDashboard.assessmentRequired", "Assessment is required."));
+            return;
+        }
+
+        if (decision === "treatment" && !prescription.trim()) {
             setError(
-                "Please enter the doctor's assessment."
+                tr("doctorDashboard.prescriptionRequired", "Prescription is required for treatment.")
             );
             return;
         }
 
-        if (
-            decision === "treatment" &&
-            !prescription.trim()
-        ) {
-            setError(
-                "Please enter the prescription."
-            );
-            return;
-        }
+        if (decision === "referral") {
+            if (!referralReason.trim()) {
+                setError(
+                    tr("doctorDashboard.referralReasonRequired", "Referral reason is required.")
+                );
+                return;
+            }
 
-        if (
-            decision === "referral" &&
-            !referralReason.trim()
-        ) {
-            setError(
-                "Please enter the referral reason."
-            );
-            return;
-        }
-
-        if (
-            decision === "referral" &&
-            !selectedFacility
-        ) {
-            setError(
-                "Please select a referral facility."
-            );
-            return;
+            if (!selectedFacility) {
+                setError(
+                    tr("doctorDashboard.referralFacilityRequired", "Please select a referral facility.")
+                );
+                return;
+            }
         }
 
         setSaving(true);
 
         try {
-            // --------------------------------
-            // STEP 1: SAVE CONSULTATION
-            // --------------------------------
+            const consultationResponse = await fetch(
+                `${API_URL}/consultations`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        visitRequestId: selectedPatient._id,
+                        assessment: assessment.trim(),
+                        decision,
+                        prescription:
+                            decision === "treatment"
+                                ? prescription.trim()
+                                : "",
+                        referralReason:
+                            decision === "referral"
+                                ? referralReason.trim()
+                                : "",
+                        doctorNotes: doctorNotes.trim()
+                    })
+                }
+            );
 
-            const consultationResponse =
-                await fetch(
-                    "https://gramarogya-27q3.onrender.com/api/consultations",
+            const consultationData = await readResponse(
+                consultationResponse
+            );
+
+            if (!consultationResponse.ok) {
+                throw new Error(
+                    getErrorMessage(
+                        consultationData,
+                        tr(
+                            "doctorDashboard.saveConsultationFailed",
+                            "Failed to save consultation."
+                        )
+                    )
+                );
+            }
+
+            if (decision === "referral") {
+                const referralResponse = await fetch(
+                    `${API_URL}/referrals`,
                     {
                         method: "POST",
                         headers: {
-                            "Content-Type":
-                                "application/json",
-                            Authorization: `Bearer ${token}`
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${authToken}`
                         },
                         body: JSON.stringify({
-                            visitRequestId:
-                                selectedPatient._id,
-                            assessment:
-                                assessment.trim(),
-                            decision,
-                            prescription:
-                                decision ===
-                                "treatment"
-                                    ? prescription.trim()
-                                    : "",
-                            referralReason:
-                                decision ===
-                                "referral"
-                                    ? referralReason.trim()
-                                    : "",
-                            doctorNotes:
-                                doctorNotes.trim()
+                            visitRequestId: selectedPatient._id,
+                            reason: referralReason.trim(),
+                            referredFacilityId: selectedFacility,
+                            doctorNotes: doctorNotes.trim()
                         })
                     }
                 );
 
-            const consultationData =
-                await consultationResponse.json();
-
-            if (!consultationResponse.ok) {
-                throw new Error(
-                    consultationData.message ||
-                        "Failed to save consultation."
-                );
-            }
-
-            // --------------------------------
-            // STEP 2: CREATE REFERRAL
-            // --------------------------------
-
-            if (decision === "referral") {
-                const referralResponse =
-                    await fetch(
-                        "https://gramarogya-27q3.onrender.com/api/referrals",
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type":
-                                    "application/json",
-                                Authorization: `Bearer ${token}`
-                            },
-                            body: JSON.stringify({
-                                visitRequestId:
-                                    selectedPatient._id,
-                                reason:
-                                    referralReason.trim(),
-                                referredFacilityId:
-                                    selectedFacility,
-                                doctorNotes:
-                                    doctorNotes.trim()
-                            })
-                        }
-                    );
-
-                const referralData =
-                    await referralResponse.json();
+                const referralData = await readResponse(referralResponse);
 
                 if (!referralResponse.ok) {
                     throw new Error(
-                        referralData.message ||
-                            "Consultation saved, but referral creation failed."
+                        getErrorMessage(
+                            referralData,
+                            tr(
+                                "doctorDashboard.referralCreationFailed",
+                                "Consultation saved, but referral creation failed. Refresh and check the existing records before retrying."
+                            )
+                        )
                     );
                 }
 
-                alert(
-                    "Consultation and referral saved successfully!"
+                setNotice(
+                    tr(
+                        "doctorDashboard.consultationReferralSaved",
+                        "Consultation and referral saved successfully."
+                    )
                 );
-
             } else {
-                alert(
-                    "Consultation saved successfully!"
+                setNotice(
+                    tr(
+                        "doctorDashboard.consultationSaved",
+                        "Consultation saved successfully."
+                    )
                 );
             }
 
-            // Remove completed patient from list
-            setPatients((currentPatients) =>
-                currentPatients.filter(
-                    (patient) =>
-                        patient._id !==
-                        selectedPatient._id
+            setPatients((current) =>
+                current.filter(
+                    (patient) => patient._id !== selectedPatient._id
                 )
             );
 
-            closeConsultation();
-
-        } catch (error) {
-            setError(error.message);
-
+            setSelectedPatient(null);
+            setAssessment("");
+            setDecision("treatment");
+            setPrescription("");
+            setReferralReason("");
+            setSelectedFacility("");
+            setDoctorNotes("");
+        } catch (err) {
+            setError(err.message);
         } finally {
             setSaving(false);
         }
     };
 
+    const patientCount = patients.length;
+    const activeConsultations = teleconsultations.filter(
+        (item) =>
+            item.status === "scheduled" || item.status === "ongoing"
+    ).length;
+    const upcomingFollowUps = followUps.filter(
+        (item) => item.status === "upcoming"
+    ).length;
+
     return (
-        <div className="triage-page">
-            <div className="triage-container">
+        <div className="doctor-dashboard">
+            <header className="doctor-topbar">
+                <div className="doctor-brand">
+                    <span className="doctor-brand-mark">G</span>
 
-                <h1>Doctor Dashboard</h1>
+                    <span>
+                        <strong>GramArogya</strong>
+                        <small>
+                            {tr(
+                                "doctorDashboard.brandSubtitle",
+                                "Healthcare workspace"
+                            )}
+                        </small>
+                    </span>
+                </div>
 
-                <p className="triage-subtitle">
-                    Review patients referred from the PHC
-                    and manage doctor consultations.
-                </p>
+                <div className="doctor-topbar-actions">
+                    <span className="doctor-role-badge">
+                        <span />
+                        {tr("doctorDashboard.doctorRole", "Doctor workspace")}
+                    </span>
 
-                {/* ======================================
-                    TELECONSULTATIONS
-                ====================================== */}
+                    <LanguageSelector />
+                </div>
+            </header>
 
-                <div
-                    style={{
-                        marginTop: "30px",
-                        marginBottom: "30px",
-                        padding: "20px",
-                        border: "1px solid #ccc",
-                        borderRadius: "10px"
-                    }}
-                >
-                    <h2>
-                        My Teleconsultations
-                    </h2>
+            <main className="doctor-dashboard-main">
+                <section className="doctor-welcome">
+                    <div>
+                        <span className="doctor-eyebrow">
+                            {tr(
+                                "doctorDashboard.welcomeEyebrow",
+                                "CLINICAL WORKSPACE"
+                            )}
+                        </span>
 
-                    <p>
-                        View and manage scheduled
-                        online doctor consultations.
-                    </p>
+                        <h1>{tr("doctorDashboard.title", "Doctor Dashboard")}</h1>
 
-                    <button
-                        className="submit-button"
-                        onClick={
-                            fetchTeleconsultations
-                        }
-                        disabled={
-                            loadingTeleconsultations
-                        }
+                        <p>
+                            {tr(
+                                "doctorDashboard.subtitle",
+                                "Review patient information, manage consultations, and coordinate follow-up care."
+                            )}
+                        </p>
+                    </div>
+
+                    <div className="doctor-welcome-icon" aria-hidden="true">
+                        <span>+</span>
+                    </div>
+                </section>
+
+                <section className="doctor-stats-grid" aria-label="Dashboard summary">
+                    <article className="doctor-stat-card">
+                        <span className="doctor-stat-icon doctor-stat-green">♧</span>
+                        <div>
+                            <span>
+                                {tr("doctorDashboard.patientQueue", "Patient queue")}
+                            </span>
+                            <strong>{patientCount}</strong>
+                            <small>
+                                {tr(
+                                    "doctorDashboard.patientQueueCaption",
+                                    "Loaded for review"
+                                )}
+                            </small>
+                        </div>
+                    </article>
+
+                    <article className="doctor-stat-card">
+                        <span className="doctor-stat-icon doctor-stat-blue">☏</span>
+                        <div>
+                            <span>
+                                {tr(
+                                    "doctorDashboard.activeTeleconsultations",
+                                    "Active consultations"
+                                )}
+                            </span>
+                            <strong>{activeConsultations}</strong>
+                            <small>
+                                {tr(
+                                    "doctorDashboard.teleconsultationCaption",
+                                    "Scheduled or ongoing"
+                                )}
+                            </small>
+                        </div>
+                    </article>
+
+                    <article className="doctor-stat-card">
+                        <span className="doctor-stat-icon doctor-stat-gold">◷</span>
+                        <div>
+                            <span>
+                                {tr(
+                                    "doctorDashboard.upcomingFollowUps",
+                                    "Upcoming follow-ups"
+                                )}
+                            </span>
+                            <strong>{upcomingFollowUps}</strong>
+                            <small>
+                                {tr(
+                                    "doctorDashboard.followUpCaption",
+                                    "In the loaded list"
+                                )}
+                            </small>
+                        </div>
+                    </article>
+                </section>
+
+                {(error || notice) && (
+                    <div
+                        className={`doctor-banner ${
+                            error ? "doctor-banner-error" : "doctor-banner-success"
+                        }`}
+                        role={error ? "alert" : "status"}
+                        aria-live="polite"
                     >
-                        {loadingTeleconsultations
-                            ? "Loading Teleconsultations..."
-                            : "View Teleconsultations"}
-                    </button>
+                        <span aria-hidden="true">{error ? "!" : "✓"}</span>
+                        <p>{error || notice}</p>
 
-                    {teleconsultations.length === 0 &&
-                        !loadingTeleconsultations && (
-                            <p
-                                style={{
-                                    marginTop: "20px"
-                                }}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setError("");
+                                setNotice("");
+                            }}
+                            aria-label={tr("doctorDashboard.dismiss", "Dismiss message")}
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
+
+                {/* Patient queue */}
+                <section className="doctor-panel">
+                    <header className="doctor-panel-header">
+                        <div className="doctor-panel-title">
+                            <span className="doctor-panel-icon">♧</span>
+
+                            <div>
+                                <span className="doctor-eyebrow">
+                                    {tr("doctorDashboard.patientSectionEyebrow", "PATIENT CARE")}
+                                </span>
+
+                                <h2>
+                                    {tr(
+                                        "doctorDashboard.patientsForReview",
+                                        "Patients for Review"
+                                    )}
+                                </h2>
+
+                                <p>
+                                    {tr(
+                                        "doctorDashboard.patientQueueDescription",
+                                        "Review the triage information and vitals recorded at the PHC."
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            className="doctor-button doctor-button-primary"
+                            type="button"
+                            onClick={fetchPatients}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="doctor-spinner" />
+                                    {tr("doctorDashboard.loadingPatients", "Loading patients...")}
+                                </>
+                            ) : (
+                                <>
+                                    ↻
+                                    {tr("doctorDashboard.viewPatients", "Load patients")}
+                                </>
+                            )}
+                        </button>
+                    </header>
+
+                    {patients.length === 0 && !loading ? (
+                        <div className="doctor-empty-state">
+                            <span aria-hidden="true">✓</span>
+
+                            <h3>
+                                {tr(
+                                    "doctorDashboard.noPatientsWaiting",
+                                    "No patients currently loaded"
+                                )}
+                            </h3>
+
+                            <p>
+                                {tr(
+                                    "doctorDashboard.noPatientsDescription",
+                                    "Select Load patients to retrieve visit requests awaiting doctor review."
+                                )}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="doctor-patient-grid">
+                            {patients.map((request) => {
+                                const triage = request.triageRecord || {};
+                                const vitals = triage.healthWorkerVitals || {};
+                                const symptoms = Array.isArray(triage.symptoms)
+                                    ? triage.symptoms
+                                    : [];
+
+                                return (
+                                    <article
+                                        className="doctor-patient-card"
+                                        key={request._id}
+                                    >
+                                        <header className="doctor-patient-card-header">
+                                            <span className="doctor-patient-avatar">
+                                                {(request.patient?.name || "P")
+                                                    .trim()
+                                                    .charAt(0)
+                                                    .toUpperCase()}
+                                            </span>
+
+                                            <div className="doctor-patient-name">
+                                                <h3>
+                                                    {request.patient?.name ||
+                                                        tr("doctorDashboard.unknown", "Unknown patient")}
+                                                </h3>
+
+                                                <p>
+                                                    {request.patient?.email ||
+                                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                                </p>
+                                            </div>
+
+                                            <span className="doctor-status-badge doctor-status-pending">
+                                                {humanize(request.status || "pending")}
+                                            </span>
+                                        </header>
+
+                                        <div className="doctor-patient-facility">
+                                            <span aria-hidden="true">⌖</span>
+                                            <div>
+                                                <span>
+                                                    {tr(
+                                                        "doctorDashboard.healthcareFacility",
+                                                        "Healthcare facility"
+                                                    )}
+                                                </span>
+                                                <strong>
+                                                    {request.facility?.name ||
+                                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="doctor-card-subheading">
+                                            {tr(
+                                                "doctorDashboard.triageInformation",
+                                                "Triage information"
+                                            )}
+                                        </div>
+
+                                        <div className="doctor-mini-grid">
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.symptoms", "Symptoms")}
+                                                </span>
+                                                <strong>
+                                                    {symptoms.length
+                                                        ? symptoms.join(", ")
+                                                        : tr("doctorDashboard.notAvailable", "Not available")}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.duration", "Duration")}
+                                                </span>
+                                                <strong>
+                                                    {triage.duration ||
+                                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.severity", "Severity")}
+                                                </span>
+                                                <strong>
+                                                    {humanize(triage.severity) ||
+                                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.urgency", "Urgency")}
+                                                </span>
+                                                <strong
+                                                    className={`doctor-urgency doctor-urgency-${String(
+                                                        triage.urgencyLevel || "unknown"
+                                                    )
+                                                        .toLowerCase()
+                                                        .replace(/[^a-z0-9-]/g, "-")}`}
+                                                >
+                                                    {humanize(triage.urgencyLevel) ||
+                                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        {triage.recommendedAction && (
+                                            <div className="doctor-recommended-action">
+                                                <span>
+                                                    {tr(
+                                                        "doctorDashboard.recommendedAction",
+                                                        "Recommended action"
+                                                    )}
+                                                </span>
+
+                                                <p>
+                                                    {humanize(triage.recommendedAction)}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        <div className="doctor-card-subheading">
+                                            {tr(
+                                                "doctorDashboard.phcRecordedVitals",
+                                                "PHC-recorded vitals"
+                                            )}
+                                        </div>
+
+                                        <div className="doctor-vitals-grid">
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.temperature", "Temperature")}
+                                                </span>
+                                                <strong>
+                                                    {vitals.temperature !== undefined &&
+                                                    vitals.temperature !== null &&
+                                                    vitals.temperature !== ""
+                                                        ? `${vitals.temperature} °F`
+                                                        : "—"}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.oxygenLevel", "Oxygen level")}
+                                                </span>
+                                                <strong>
+                                                    {vitals.oxygenLevel !== undefined &&
+                                                    vitals.oxygenLevel !== null &&
+                                                    vitals.oxygenLevel !== ""
+                                                        ? `${vitals.oxygenLevel}%`
+                                                        : "—"}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.pulseRate", "Pulse rate")}
+                                                </span>
+                                                <strong>
+                                                    {vitals.pulseRate !== undefined &&
+                                                    vitals.pulseRate !== null &&
+                                                    vitals.pulseRate !== ""
+                                                        ? `${vitals.pulseRate} bpm`
+                                                        : "—"}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span>
+                                                    {tr("doctorDashboard.bloodPressure", "Blood pressure")}
+                                                </span>
+                                                <strong>
+                                                    {vitals.bloodPressure || "—"}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        {vitals.notes && (
+                                            <p className="doctor-phc-notes">
+                                                <strong>
+                                                    {tr("doctorDashboard.phcNotes", "PHC notes")}:
+                                                </strong>{" "}
+                                                {vitals.notes}
+                                            </p>
+                                        )}
+
+                                        <button
+                                            className="doctor-button doctor-button-primary doctor-review-button"
+                                            type="button"
+                                            onClick={() => openConsultation(request)}
+                                        >
+                                            {tr("doctorDashboard.reviewPatient", "Review patient")}
+                                            <span aria-hidden="true">→</span>
+                                        </button>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+
+                {/* Consultation editor */}
+                {selectedPatient && (
+                    <section className="doctor-panel doctor-consultation-panel">
+                        <header className="doctor-panel-header">
+                            <div className="doctor-panel-title">
+                                <span className="doctor-panel-icon">✚</span>
+
+                                <div>
+                                    <span className="doctor-eyebrow">
+                                        {tr("doctorDashboard.consultationEyebrow", "CLINICAL REVIEW")}
+                                    </span>
+
+                                    <h2>
+                                        {tr(
+                                            "doctorDashboard.doctorConsultation",
+                                            "Doctor Consultation"
+                                        )}
+                                    </h2>
+
+                                    <p>
+                                        {tr("doctorDashboard.patientLabel", "Patient")}:{" "}
+                                        <strong>
+                                            {selectedPatient.patient?.name ||
+                                                tr("doctorDashboard.unknown", "Unknown")}
+                                        </strong>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                className="doctor-button doctor-button-secondary"
+                                type="button"
+                                onClick={closeConsultation}
+                                disabled={saving}
                             >
-                                No teleconsultations
-                                available.
+                                {tr("doctorDashboard.backToPatients", "Close review")}
+                            </button>
+                        </header>
+
+                        <div className="doctor-selected-patient-summary">
+                            <div>
+                                <span>
+                                    {tr("doctorDashboard.symptoms", "Symptoms")}
+                                </span>
+                                <strong>
+                                    {selectedPatient.triageRecord?.symptoms?.join(", ") ||
+                                        tr("doctorDashboard.notAvailable", "Not available")}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {tr("doctorDashboard.severity", "Severity")}
+                                </span>
+                                <strong>
+                                    {humanize(selectedPatient.triageRecord?.severity) || "—"}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {tr("doctorDashboard.urgency", "Urgency")}
+                                </span>
+                                <strong>
+                                    {humanize(
+                                        selectedPatient.triageRecord?.urgencyLevel
+                                    ) || "—"}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>
+                                    {tr("doctorDashboard.temperature", "Temperature")}
+                                </span>
+                                <strong>
+                                    {selectedPatient.triageRecord?.healthWorkerVitals?.temperature ??
+                                        "—"}
+                                    {selectedPatient.triageRecord?.healthWorkerVitals?.temperature !==
+                                        undefined &&
+                                    selectedPatient.triageRecord?.healthWorkerVitals?.temperature !==
+                                        null
+                                        ? " °F"
+                                        : ""}
+                                </strong>
+                            </div>
+                        </div>
+
+                        {loadingFacilities && (
+                            <p className="doctor-inline-loading">
+                                <span className="doctor-spinner" />
+                                {tr(
+                                    "doctorDashboard.loadingFacilities",
+                                    "Loading facilities..."
+                                )}
                             </p>
                         )}
 
-                    {teleconsultations.length > 0 && (
-                        <div
-                            style={{
-                                marginTop: "20px"
-                            }}
-                        >
-                            {teleconsultations.map(
-                                (consultation) => (
-                                    <div
-                                        key={
-                                            consultation._id
+                        <div className="doctor-form">
+                            <div className="doctor-form-section">
+                                <label htmlFor="doctor-assessment">
+                                    {tr(
+                                        "doctorDashboard.doctorAssessment",
+                                        "Doctor assessment"
+                                    )}
+                                    <span>*</span>
+                                </label>
+
+                                <textarea
+                                    id="doctor-assessment"
+                                    value={assessment}
+                                    onChange={(e) => setAssessment(e.target.value)}
+                                    placeholder={tr(
+                                        "doctorDashboard.assessmentPlaceholder",
+                                        "Enter your clinical assessment..."
+                                    )}
+                                    rows={4}
+                                    required
+                                />
+                            </div>
+
+                            <div className="doctor-form-section">
+                                <label htmlFor="doctor-decision">
+                                    {tr(
+                                        "doctorDashboard.consultationDecision",
+                                        "Consultation decision"
+                                    )}
+                                </label>
+
+                                <select
+                                    id="doctor-decision"
+                                    value={decision}
+                                    onChange={(e) => {
+                                        const nextDecision = e.target.value;
+                                        setDecision(nextDecision);
+                                        clearMessages();
+
+                                        if (nextDecision === "referral") {
+                                            fetchFacilities();
+                                        } else {
+                                            setSelectedFacility("");
+                                            setReferralReason("");
                                         }
-                                        style={{
-                                            border:
-                                                "1px solid #ddd",
-                                            borderRadius:
-                                                "10px",
-                                            padding:
-                                                "20px",
-                                            marginTop:
-                                                "15px"
-                                        }}
-                                    >
-                                        <h3>
-                                            Patient:{" "}
-                                            {consultation
-                                                .patient
-                                                ?.name ||
-                                                "Unknown"}
-                                        </h3>
+                                    }}
+                                >
+                                    <option value="treatment">
+                                        {tr("doctorDashboard.treatment", "Treatment")}
+                                    </option>
 
-                                        <p>
-                                            <strong>
-                                                Email:
-                                            </strong>{" "}
-                                            {consultation
-                                                .patient
-                                                ?.email ||
-                                                "Unknown"}
-                                        </p>
+                                    <option value="referral">
+                                        {tr("doctorDashboard.referral", "Referral")}
+                                    </option>
+                                </select>
+                            </div>
 
-                                        <p>
-                                            <strong>
-                                                Date & Time:
-                                            </strong>{" "}
-                                            {formatDate(
-                                                consultation.scheduledAt
+                            {decision === "treatment" && (
+                                <div className="doctor-form-section">
+                                    <label htmlFor="doctor-prescription">
+                                        {tr(
+                                            "doctorDashboard.prescription",
+                                            "Prescription"
+                                        )}
+                                        <span>*</span>
+                                    </label>
+
+                                    <textarea
+                                        id="doctor-prescription"
+                                        value={prescription}
+                                        onChange={(e) =>
+                                            setPrescription(e.target.value)
+                                        }
+                                        placeholder={tr(
+                                            "doctorDashboard.prescriptionPlaceholder",
+                                            "Enter the treatment or prescription details..."
+                                        )}
+                                        rows={4}
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            {decision === "referral" && (
+                                <>
+                                    <div className="doctor-form-section">
+                                        <label htmlFor="doctor-referral-facility">
+                                            {tr(
+                                                "doctorDashboard.referralFacility",
+                                                "Referral facility"
                                             )}
-                                        </p>
+                                            <span>*</span>
+                                        </label>
 
-                                        <p>
-                                            <strong>
-                                                Visit Status:
-                                            </strong>{" "}
-                                            {consultation
-                                                .visitRequest
-                                                ?.status ||
-                                                "Unknown"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Consultation Status:
-                                            </strong>{" "}
-                                            {
-                                                consultation.status
+                                        <select
+                                            id="doctor-referral-facility"
+                                            value={selectedFacility}
+                                            onChange={(e) =>
+                                                setSelectedFacility(e.target.value)
                                             }
-                                        </p>
+                                            required
+                                            disabled={loadingFacilities}
+                                        >
+                                            <option value="">
+                                                {tr(
+                                                    "doctorDashboard.selectReferralFacility",
+                                                    "Select a facility"
+                                                )}
+                                            </option>
 
-                                        {consultation.status ===
-                                            "scheduled" && (
+                                            {facilities.map((facility) => (
+                                                <option
+                                                    key={facility._id}
+                                                    value={facility._id}
+                                                >
+                                                    {facility.name} — {facility.facilityType}
+                                                    {facility.district
+                                                        ? ` — ${facility.district}`
+                                                        : ""}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {!loadingFacilities &&
+                                            facilities.length === 0 && (
+                                                <small>
+                                                    {tr(
+                                                        "doctorDashboard.noReferralFacilities",
+                                                        "No active referral facilities are available."
+                                                    )}
+                                                </small>
+                                            )}
+                                    </div>
+
+                                    <div className="doctor-form-section">
+                                        <label htmlFor="doctor-referral-reason">
+                                            {tr(
+                                                "doctorDashboard.referralReason",
+                                                "Referral reason"
+                                            )}
+                                            <span>*</span>
+                                        </label>
+
+                                        <textarea
+                                            id="doctor-referral-reason"
+                                            value={referralReason}
+                                            onChange={(e) =>
+                                                setReferralReason(e.target.value)
+                                            }
+                                            placeholder={tr(
+                                                "doctorDashboard.referralReasonPlaceholder",
+                                                "Explain why specialist care is needed..."
+                                            )}
+                                            rows={4}
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className="doctor-form-section">
+                                <label htmlFor="doctor-notes">
+                                    {tr("doctorDashboard.doctorNotes", "Doctor notes")}
+                                </label>
+
+                                <textarea
+                                    id="doctor-notes"
+                                    value={doctorNotes}
+                                    onChange={(e) => setDoctorNotes(e.target.value)}
+                                    placeholder={tr(
+                                        "doctorDashboard.doctorNotesPlaceholder",
+                                        "Add any additional notes (optional)..."
+                                    )}
+                                    rows={3}
+                                />
+                            </div>
+
+                            <div className="doctor-form-actions">
+                                <button
+                                    className="doctor-button doctor-button-secondary"
+                                    type="button"
+                                    onClick={closeConsultation}
+                                    disabled={saving}
+                                >
+                                    {tr("doctorDashboard.backToPatients", "Cancel")}
+                                </button>
+
+                                <button
+                                    className="doctor-button doctor-button-primary"
+                                    type="button"
+                                    onClick={handleSaveConsultation}
+                                    disabled={
+                                        saving ||
+                                        loadingFacilities ||
+                                        (decision === "referral" &&
+                                            facilities.length === 0)
+                                    }
+                                >
+                                    {saving ? (
+                                        <>
+                                            <span className="doctor-spinner" />
+                                            {tr(
+                                                "doctorDashboard.savingConsultation",
+                                                "Saving consultation..."
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {tr(
+                                                "doctorDashboard.saveConsultation",
+                                                "Save consultation"
+                                            )}
+                                            <span aria-hidden="true">→</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* Teleconsultations */}
+                <section className="doctor-panel">
+                    <header className="doctor-panel-header">
+                        <div className="doctor-panel-title">
+                            <span className="doctor-panel-icon doctor-icon-blue">☏</span>
+
+                            <div>
+                                <span className="doctor-eyebrow">
+                                    {tr("doctorDashboard.teleconsultationEyebrow", "REMOTE CARE")}
+                                </span>
+
+                                <h2>
+                                    {tr(
+                                        "doctorDashboard.myTeleconsultations",
+                                        "My Teleconsultations"
+                                    )}
+                                </h2>
+
+                                <p>
+                                    {tr(
+                                        "doctorDashboard.teleconsultationDescription",
+                                        "Start, join, and complete remote consultations."
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            className="doctor-button doctor-button-primary"
+                            type="button"
+                            onClick={fetchTeleconsultations}
+                            disabled={loadingTeleconsultations}
+                        >
+                            {loadingTeleconsultations ? (
+                                <>
+                                    <span className="doctor-spinner" />
+                                    {tr(
+                                        "doctorDashboard.loadingTeleconsultations",
+                                        "Loading..."
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    ↻
+                                    {tr(
+                                        "doctorDashboard.viewTeleconsultations",
+                                        "Load consultations"
+                                    )}
+                                </>
+                            )}
+                        </button>
+                    </header>
+
+                    {teleconsultations.length === 0 &&
+                        !loadingTeleconsultations && (
+                            <div className="doctor-empty-state">
+                                <span aria-hidden="true">☏</span>
+                                <h3>
+                                    {tr(
+                                        "doctorDashboard.noTeleconsultations",
+                                        "No teleconsultations loaded"
+                                    )}
+                                </h3>
+                                <p>
+                                    {tr(
+                                        "doctorDashboard.noTeleconsultationsDescription",
+                                        "Load your teleconsultations to view their schedules and status."
+                                    )}
+                                </p>
+                            </div>
+                        )}
+
+                    {teleconsultations.length > 0 && (
+                        <div className="doctor-resource-list">
+                            {teleconsultations.map((consultation) => (
+                                <article
+                                    key={consultation._id}
+                                    className="doctor-resource-card"
+                                >
+                                    <div className="doctor-resource-main">
+                                        <span className="doctor-patient-avatar doctor-avatar-blue">
+                                            {(consultation.patient?.name || "P")
+                                                .trim()
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </span>
+
+                                        <div>
+                                            <h3>
+                                                {consultation.patient?.name ||
+                                                    tr("doctorDashboard.unknown", "Unknown patient")}
+                                            </h3>
+
+                                            <p>
+                                                {consultation.patient?.email ||
+                                                    tr("doctorDashboard.unknown", "Unknown")}
+                                            </p>
+
+                                            <span className="doctor-resource-date">
+                                                {formatDate(consultation.scheduledAt)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="doctor-resource-statuses">
+                                        <span className={`doctor-status-badge ${statusClass(consultation.status)}`}>
+                                            {humanize(consultation.status)}
+                                        </span>
+
+                                        {consultation.visitRequest?.status && (
+                                            <span className={`doctor-status-badge ${statusClass(consultation.visitRequest.status)}`}>
+                                                {humanize(consultation.visitRequest.status)}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="doctor-resource-actions">
+                                        {consultation.status === "scheduled" && (
                                             <button
-                                                className="submit-button"
+                                                className="doctor-button doctor-button-primary"
+                                                type="button"
                                                 onClick={() =>
-                                                    startTeleconsultation(
-                                                        consultation
-                                                    )
+                                                    startTeleconsultation(consultation)
                                                 }
+                                                disabled={!consultation.meetingLink}
                                             >
-                                                Start Consultation
+                                                {tr(
+                                                    "doctorDashboard.startConsultation",
+                                                    "Start consultation"
+                                                )}
+                                                <span aria-hidden="true">↗</span>
                                             </button>
                                         )}
 
-                                        {consultation.status ===
-                                            "ongoing" && (
+                                        {consultation.status === "ongoing" && (
                                             <>
                                                 <button
-                                                    className="submit-button"
+                                                    className="doctor-button doctor-button-primary"
+                                                    type="button"
                                                     onClick={() =>
-                                                        joinTeleconsultation(
-                                                            consultation
-                                                        )
+                                                        joinTeleconsultation(consultation)
                                                     }
+                                                    disabled={!consultation.meetingLink}
                                                 >
-                                                    Join Consultation
+                                                    {tr(
+                                                        "doctorDashboard.joinConsultation",
+                                                        "Join consultation"
+                                                    )}
+                                                    <span aria-hidden="true">↗</span>
                                                 </button>
 
                                                 <button
-                                                    className="submit-button"
-                                                    style={{
-                                                        marginLeft:
-                                                            "10px"
-                                                    }}
+                                                    className="doctor-button doctor-button-secondary"
+                                                    type="button"
                                                     onClick={() =>
-                                                        completeTeleconsultation(
-                                                            consultation
-                                                        )
+                                                        completeTeleconsultation(consultation)
                                                     }
                                                 >
-                                                    Complete Consultation
+                                                    {tr(
+                                                        "doctorDashboard.completeConsultation",
+                                                        "Complete"
+                                                    )}
                                                 </button>
                                             </>
                                         )}
 
-                                        {consultation.status ===
-                                            "completed" && (
-                                            <p
-                                                style={{
-                                                    marginTop:
-                                                        "15px"
-                                                }}
-                                            >
-                                                This consultation
-                                                has been completed.
-                                            </p>
+                                        {consultation.status === "completed" && (
+                                            <span className="doctor-completion-note">
+                                                ✓{" "}
+                                                {tr(
+                                                    "doctorDashboard.consultationCompleted",
+                                                    "Consultation completed"
+                                                )}
+                                            </span>
                                         )}
 
-                                        {consultation.status ===
-                                            "cancelled" && (
-                                            <p
-                                                style={{
-                                                    marginTop:
-                                                        "15px"
-                                                }}
-                                            >
-                                                This consultation
-                                                has been cancelled.
-                                            </p>
+                                        {consultation.status === "cancelled" && (
+                                            <span className="doctor-completion-note doctor-completion-cancelled">
+                                                {tr(
+                                                    "doctorDashboard.consultationCancelled",
+                                                    "Consultation cancelled"
+                                                )}
+                                            </span>
                                         )}
                                     </div>
-                                )
-                            )}
+                                </article>
+                            ))}
                         </div>
                     )}
-                </div>
+                </section>
 
-                {error && (
-                    <div className="error-message">
-                        {error}
-                    </div>
-                )}
+                {/* Follow-ups */}
+                <section className="doctor-panel">
+                    <header className="doctor-panel-header">
+                        <div className="doctor-panel-title">
+                            <span className="doctor-panel-icon doctor-icon-gold">◷</span>
 
-                {/* ======================================
-                    FOLLOW-UPS
-                ====================================== */}
+                            <div>
+                                <span className="doctor-eyebrow">
+                                    {tr("doctorDashboard.followUpEyebrow", "CONTINUITY OF CARE")}
+                                </span>
 
-                <div
-                    style={{
-                        marginTop: "30px",
-                        marginBottom: "30px",
-                        padding: "20px",
-                        border: "1px solid #ccc",
-                        borderRadius: "10px"
-                    }}
-                >
-                    <h2>My Follow-ups</h2>
+                                <h2>
+                                    {tr("doctorDashboard.myFollowUps", "My Follow-ups")}
+                                </h2>
 
-                    <p>
-                        View and manage patient follow-up appointments.
-                    </p>
-
-                    <button
-                        className="submit-button"
-                        onClick={fetchFollowUps}
-                        disabled={loadingFollowUps}
-                    >
-                        {loadingFollowUps
-                            ? "Loading Follow-ups..."
-                            : "View Follow-ups"}
-                    </button>
-
-                    {/* CREATE FOLLOW-UP */}
-
-                    <div
-                        style={{
-                            marginTop: "25px",
-                            padding: "20px",
-                            border: "1px solid #ddd",
-                            borderRadius: "10px"
-                        }}
-                    >
-                        <h3>Create Follow-up</h3>
-
-                        {!selectedPatient ? (
-                            <p>
-                                Open a patient consultation below to
-                                create a follow-up for that patient.
-                            </p>
-                        ) : (
-                            <>
                                 <p>
-                                    <strong>Patient:</strong>{" "}
-                                    {selectedPatient.patient?.name ||
-                                        "Unknown"}
+                                    {tr(
+                                        "doctorDashboard.followUpDescription",
+                                        "Schedule follow-up visits and track their status."
+                                    )}
                                 </p>
+                            </div>
+                        </div>
 
-                                <div className="form-section">
-                                    <h3>Follow-up Date & Time</h3>
+                        <button
+                            className="doctor-button doctor-button-primary"
+                            type="button"
+                            onClick={fetchFollowUps}
+                            disabled={loadingFollowUps}
+                        >
+                            {loadingFollowUps ? (
+                                <>
+                                    <span className="doctor-spinner" />
+                                    {tr("doctorDashboard.loadingFollowUps", "Loading...")}
+                                </>
+                            ) : (
+                                <>
+                                    ↻
+                                    {tr("doctorDashboard.viewFollowUps", "Load follow-ups")}
+                                </>
+                            )}
+                        </button>
+                    </header>
+
+                    {selectedPatient ? (
+                        <form className="doctor-follow-up-form" onSubmit={createFollowUp}>
+                            <div className="doctor-form-section">
+                                <label>
+                                    {tr("doctorDashboard.createFollowUp", "Create follow-up")}
+                                </label>
+
+                                <p className="doctor-form-description">
+                                    {tr("doctorDashboard.patientLabel", "Patient")}:{" "}
+                                    <strong>
+                                        {selectedPatient.patient?.name ||
+                                            tr("doctorDashboard.unknown", "Unknown")}
+                                    </strong>
+                                </p>
+                            </div>
+
+                            <div className="doctor-follow-up-fields">
+                                <div className="doctor-form-section">
+                                    <label htmlFor="follow-up-date">
+                                        {tr(
+                                            "doctorDashboard.followUpDateTime",
+                                            "Follow-up date and time"
+                                        )}
+                                        <span>*</span>
+                                    </label>
 
                                     <input
+                                        id="follow-up-date"
                                         type="datetime-local"
                                         value={followUpDate}
-                                        onChange={(e) =>
-                                            setFollowUpDate(
-                                                e.target.value
-                                            )
-                                        }
+                                        onChange={(e) => setFollowUpDate(e.target.value)}
+                                        min={new Date(Date.now() + 60000)
+                                            .toISOString()
+                                            .slice(0, 16)}
+                                        required
                                     />
                                 </div>
 
-                                <div className="form-section">
-                                    <h3>Follow-up Reason</h3>
+                                <div className="doctor-form-section">
+                                    <label htmlFor="follow-up-reason">
+                                        {tr(
+                                            "doctorDashboard.followUpReason",
+                                            "Follow-up reason"
+                                        )}
+                                        <span>*</span>
+                                    </label>
 
                                     <textarea
-                                        placeholder="Enter the reason for follow-up..."
+                                        id="follow-up-reason"
                                         value={followUpReason}
-                                        onChange={(e) =>
-                                            setFollowUpReason(
-                                                e.target.value
-                                            )
-                                        }
-                                        rows="3"
+                                        onChange={(e) => setFollowUpReason(e.target.value)}
+                                        placeholder={tr(
+                                            "doctorDashboard.followUpReasonPlaceholder",
+                                            "Enter the reason for follow-up..."
+                                        )}
+                                        rows={2}
+                                        required
                                     />
                                 </div>
 
-                                <div className="form-section">
-                                    <h3>Follow-up Notes</h3>
+                                <div className="doctor-form-section doctor-follow-up-notes">
+                                    <label htmlFor="follow-up-notes">
+                                        {tr(
+                                            "doctorDashboard.followUpNotes",
+                                            "Follow-up notes"
+                                        )}
+                                    </label>
 
                                     <textarea
-                                        placeholder="Enter additional follow-up instructions..."
+                                        id="follow-up-notes"
                                         value={followUpNotes}
-                                        onChange={(e) =>
-                                            setFollowUpNotes(
-                                                e.target.value
-                                            )
-                                        }
-                                        rows="3"
+                                        onChange={(e) => setFollowUpNotes(e.target.value)}
+                                        placeholder={tr(
+                                            "doctorDashboard.followUpNotesPlaceholder",
+                                            "Optional notes for the next visit..."
+                                        )}
+                                        rows={3}
                                     />
                                 </div>
+                            </div>
 
-                                <button
-                                    className="submit-button"
-                                    onClick={createFollowUp}
-                                    disabled={creatingFollowUp}
-                                >
-                                    {creatingFollowUp
-                                        ? "Creating Follow-up..."
-                                        : "Create Follow-up"}
-                                </button>
-                            </>
-                        )}
-                    </div>
-
-                    {followUps.length === 0 &&
-                        !loadingFollowUps && (
-                            <p
-                                style={{
-                                    marginTop: "20px"
-                                }}
+                            <button
+                                className="doctor-button doctor-button-primary"
+                                type="submit"
+                                disabled={creatingFollowUp}
                             >
-                                No follow-ups available.
+                                {creatingFollowUp ? (
+                                    <>
+                                        <span className="doctor-spinner" />
+                                        {tr(
+                                            "doctorDashboard.creatingFollowUp",
+                                            "Creating follow-up..."
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        {tr(
+                                            "doctorDashboard.createFollowUp",
+                                            "Create follow-up"
+                                        )}
+                                        <span aria-hidden="true">→</span>
+                                    </>
+                                )}
+                            </button>
+                        </form>
+                    ) : (
+                        <div className="doctor-inline-hint">
+                            <span aria-hidden="true">ⓘ</span>
+                            <p>
+                                {tr(
+                                    "doctorDashboard.openPatientForFollowUp",
+                                    "Open a patient for review to create a follow-up for that visit."
+                                )}
                             </p>
-                        )}
+                        </div>
+                    )}
+
+                    {followUps.length === 0 && !loadingFollowUps && (
+                        <div className="doctor-empty-state">
+                            <span aria-hidden="true">◷</span>
+                            <h3>
+                                {tr(
+                                    "doctorDashboard.noFollowUps",
+                                    "No follow-ups loaded"
+                                )}
+                            </h3>
+                            <p>
+                                {tr(
+                                    "doctorDashboard.noFollowUpsDescription",
+                                    "Load your follow-ups to review scheduled and completed care."
+                                )}
+                            </p>
+                        </div>
+                    )}
 
                     {followUps.length > 0 && (
-                        <div
-                            style={{
-                                marginTop: "20px"
-                            }}
-                        >
+                        <div className="doctor-resource-list">
                             {followUps.map((followUp) => (
-                                <div
+                                <article
                                     key={followUp._id}
-                                    style={{
-                                        border: "1px solid #ddd",
-                                        borderRadius: "10px",
-                                        padding: "20px",
-                                        marginTop: "15px"
-                                    }}
+                                    className="doctor-resource-card"
                                 >
-                                    <h3>
-                                        Patient:{" "}
-                                        {followUp.patient?.name ||
-                                            "Unknown"}
-                                    </h3>
+                                    <div className="doctor-resource-main">
+                                        <span className="doctor-patient-avatar doctor-avatar-gold">
+                                            {(followUp.patient?.name || "P")
+                                                .trim()
+                                                .charAt(0)
+                                                .toUpperCase()}
+                                        </span>
 
-                                    <p>
-                                        <strong>Email:</strong>{" "}
-                                        {followUp.patient?.email ||
-                                            "Unknown"}
-                                    </p>
+                                        <div>
+                                            <h3>
+                                                {followUp.patient?.name ||
+                                                    tr("doctorDashboard.unknown", "Unknown patient")}
+                                            </h3>
 
-                                    <p>
-                                        <strong>
-                                            Follow-up Date:
-                                        </strong>{" "}
-                                        {formatDate(
-                                            followUp.followUpDate
-                                        )}
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Reason:
-                                        </strong>{" "}
-                                        {followUp.reason}
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Notes:
-                                        </strong>{" "}
-                                        {followUp.notes ||
-                                            "No notes"}
-                                    </p>
-
-                                    <p>
-                                        <strong>
-                                            Status:
-                                        </strong>{" "}
-                                        {followUp.status}
-                                    </p>
-
-                                    {/* UPCOMING */}
-
-                                    {followUp.status ===
-                                        "upcoming" && (
-                                        <>
-                                            <p
-                                                style={{
-                                                    marginTop:
-                                                        "15px"
-                                                }}
-                                            >
-                                                This follow-up is
-                                                upcoming.
+                                            <p>
+                                                {followUp.patient?.email ||
+                                                    tr("doctorDashboard.unknown", "Unknown")}
                                             </p>
 
-                                            <div
-                                                style={{
-                                                    marginTop:
-                                                        "15px"
-                                                }}
-                                            >
+                                            <span className="doctor-resource-date">
+                                                {formatDate(followUp.followUpDate)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="doctor-follow-up-summary">
+                                        <div>
+                                            <span>
+                                                {tr("doctorDashboard.reason", "Reason")}
+                                            </span>
+                                            <p>{followUp.reason}</p>
+                                        </div>
+
+                                        <div>
+                                            <span>
+                                                {tr("doctorDashboard.notes", "Notes")}
+                                            </span>
+                                            <p>
+                                                {followUp.notes ||
+                                                    tr("doctorDashboard.noNotes", "No notes")}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="doctor-resource-actions">
+                                        <span className={`doctor-status-badge ${statusClass(followUp.status)}`}>
+                                            {humanize(followUp.status)}
+                                        </span>
+
+                                        {followUp.status === "upcoming" && (
+                                            <>
                                                 <button
-                                                    className="submit-button"
+                                                    className="doctor-button doctor-button-primary"
+                                                    type="button"
                                                     onClick={() =>
                                                         updateFollowUpStatus(
                                                             followUp._id,
                                                             "completed"
                                                         )
                                                     }
+                                                    disabled={updatingFollowUpId === followUp._id}
                                                 >
-                                                    Mark Completed
+                                                    {updatingFollowUpId === followUp._id ? (
+                                                        <span className="doctor-spinner" />
+                                                    ) : (
+                                                        "✓"
+                                                    )}
+                                                    {tr(
+                                                        "doctorDashboard.markCompleted",
+                                                        "Mark completed"
+                                                    )}
                                                 </button>
 
                                                 <button
-                                                    className="submit-button"
-                                                    style={{
-                                                        marginLeft:
-                                                            "10px"
-                                                    }}
+                                                    className="doctor-button doctor-button-secondary"
+                                                    type="button"
                                                     onClick={() =>
                                                         updateFollowUpStatus(
                                                             followUp._id,
                                                             "cancelled"
                                                         )
                                                     }
+                                                    disabled={updatingFollowUpId === followUp._id}
                                                 >
-                                                    Cancel Follow-up
+                                                    {tr(
+                                                        "doctorDashboard.cancelFollowUp",
+                                                        "Cancel follow-up"
+                                                    )}
                                                 </button>
-                                            </div>
-                                        </>
-                                    )}
+                                            </>
+                                        )}
 
-                                    {/* COMPLETED */}
+                                        {followUp.status === "completed" && (
+                                            <span className="doctor-completion-note">
+                                                ✓{" "}
+                                                {tr(
+                                                    "doctorDashboard.followUpCompleted",
+                                                    "Follow-up completed"
+                                                )}
+                                            </span>
+                                        )}
 
-                                    {followUp.status ===
-                                        "completed" && (
-                                        <p
-                                            style={{
-                                                marginTop:
-                                                    "15px"
-                                            }}
-                                        >
-                                            This follow-up has been
-                                            completed.
-                                        </p>
-                                    )}
-
-                                    {/* CANCELLED */}
-
-                                    {followUp.status ===
-                                        "cancelled" && (
-                                        <p
-                                            style={{
-                                                marginTop:
-                                                    "15px"
-                                            }}
-                                        >
-                                            This follow-up has been
-                                            cancelled.
-                                        </p>
-                                    )}
-                                </div>
+                                        {followUp.status === "cancelled" && (
+                                            <span className="doctor-completion-note doctor-completion-cancelled">
+                                                {tr(
+                                                    "doctorDashboard.followUpCancelled",
+                                                    "Follow-up cancelled"
+                                                )}
+                                            </span>
+                                        )}
+                                    </div>
+                                </article>
                             ))}
                         </div>
                     )}
-                </div>
+                </section>
 
-                {/* ======================================
-                    PATIENT LIST
-                ====================================== */}
-
-                {!selectedPatient && (
-                    <>
-                        <button
-                            className="submit-button"
-                            onClick={fetchPatients}
-                            disabled={loading}
-                        >
-                            {loading
-                                ? "Loading Patients..."
-                                : "View Patients"}
-                        </button>
-
-                        {patients.length === 0 &&
-                            !loading &&
-                            !error && (
-                                <p
-                                    style={{
-                                        marginTop:
-                                            "25px"
-                                    }}
-                                >
-                                    No patients are
-                                    currently waiting
-                                    for doctor review.
-                                </p>
-                            )}
-
-                        {patients.length > 0 && (
-                            <div
-                                style={{
-                                    marginTop: "30px"
-                                }}
-                            >
-                                <h2>
-                                    Patients for Review
-                                </h2>
-
-                                {patients.map(
-                                    (request) => {
-                                        const triage =
-                                            request.triageRecord;
-
-                                        const vitals =
-                                            triage?.healthWorkerVitals;
-
-                                        return (
-                                            <div
-                                                key={
-                                                    request._id
-                                                }
-                                                style={{
-                                                    border:
-                                                        "1px solid #ccc",
-                                                    borderRadius:
-                                                        "10px",
-                                                    padding:
-                                                        "20px",
-                                                    marginTop:
-                                                        "15px"
-                                                }}
-                                            >
-                                                <h3>
-                                                    Patient:{" "}
-                                                    {request
-                                                        .patient
-                                                        ?.name ||
-                                                        "Unknown"}
-                                                </h3>
-
-                                                <p>
-                                                    <strong>
-                                                        Email:
-                                                    </strong>{" "}
-                                                    {request
-                                                        .patient
-                                                        ?.email ||
-                                                        "Unknown"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Healthcare Facility:
-                                                    </strong>{" "}
-                                                    {request
-                                                        .facility
-                                                        ?.name ||
-                                                        "Unknown"}
-                                                </p>
-
-                                                <hr />
-
-                                                <h3>
-                                                    Triage
-                                                    Information
-                                                </h3>
-
-                                                <p>
-                                                    <strong>
-                                                        Symptoms:
-                                                    </strong>{" "}
-                                                    {triage?.symptoms?.join(
-                                                        ", "
-                                                    ) ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Duration:
-                                                    </strong>{" "}
-                                                    {triage?.duration ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Severity:
-                                                    </strong>{" "}
-                                                    {triage?.severity ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Urgency:
-                                                    </strong>{" "}
-                                                    {triage?.urgencyLevel ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Recommended Action:
-                                                    </strong>{" "}
-                                                    {triage?.recommendedAction ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <hr />
-
-                                                <h3>
-                                                    PHC Recorded
-                                                    Vitals
-                                                </h3>
-
-                                                <p>
-                                                    <strong>
-                                                        Temperature:
-                                                    </strong>{" "}
-                                                    {vitals?.temperature ??
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Oxygen Level:
-                                                    </strong>{" "}
-                                                    {vitals?.oxygenLevel ??
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Pulse Rate:
-                                                    </strong>{" "}
-                                                    {vitals?.pulseRate ??
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Blood Pressure:
-                                                    </strong>{" "}
-                                                    {vitals?.bloodPressure ||
-                                                        "Not available"}
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        PHC Notes:
-                                                    </strong>{" "}
-                                                    {vitals?.notes ||
-                                                        "No notes"}
-                                                </p>
-
-                                                <button
-                                                    className="submit-button"
-                                                    style={{
-                                                        marginTop:
-                                                            "15px"
-                                                    }}
-                                                    onClick={() =>
-                                                        openConsultation(
-                                                            request
-                                                        )
-                                                    }
-                                                >
-                                                    Review Patient
-                                                </button>
-                                            </div>
-                                        );
-                                    }
-                                )}
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* ======================================
-                    CONSULTATION FORM
-                ====================================== */}
-
-                {selectedPatient && (
-                    <div
-                        style={{
-                            marginTop: "30px"
-                        }}
-                    >
-                        <button
-                            className="submit-button"
-                            onClick={closeConsultation}
-                            style={{
-                                marginBottom:
-                                    "20px"
-                            }}
-                        >
-                            ← Back to Patients
-                        </button>
-
-                        <h2>
-                            Doctor Consultation
-                        </h2>
-
-                        <p className="triage-subtitle">
-                            Patient:{" "}
-                            {selectedPatient.patient
-                                ?.name || "Unknown"}
-                        </p>
-
-                        {/* PATIENT INFORMATION */}
-
-                        <div
-                            style={{
-                                border:
-                                    "1px solid #ccc",
-                                borderRadius:
-                                    "10px",
-                                padding: "20px",
-                                marginTop: "20px"
-                            }}
-                        >
-                            <h3>
-                                Patient Information
-                            </h3>
-
-                            <p>
-                                <strong>
-                                    Symptoms:
-                                </strong>{" "}
-                                {selectedPatient
-                                    .triageRecord
-                                    ?.symptoms?.join(
-                                        ", "
-                                    )}
-                            </p>
-
-                            <p>
-                                <strong>
-                                    Severity:
-                                </strong>{" "}
-                                {
-                                    selectedPatient
-                                        .triageRecord
-                                        ?.severity
-                                }
-                            </p>
-
-                            <p>
-                                <strong>
-                                    Urgency:
-                                </strong>{" "}
-                                {
-                                    selectedPatient
-                                        .triageRecord
-                                        ?.urgencyLevel
-                                }
-                            </p>
-
-                            <h3
-                                style={{
-                                    marginTop:
-                                        "25px"
-                                }}
-                            >
-                                PHC Vitals
-                            </h3>
-
-                            <p>
-                                <strong>
-                                    Temperature:
-                                </strong>{" "}
-                                {
-                                    selectedPatient
-                                        .triageRecord
-                                        ?.healthWorkerVitals
-                                        ?.temperature
-                                }
-                            </p>
-
-                            <p>
-                                <strong>
-                                    Oxygen:
-                                </strong>{" "}
-                                {
-                                    selectedPatient
-                                        .triageRecord
-                                        ?.healthWorkerVitals
-                                        ?.oxygenLevel
-                                }
-                            </p>
-
-                            <p>
-                                <strong>
-                                    Pulse:
-                                </strong>{" "}
-                                {
-                                    selectedPatient
-                                        .triageRecord
-                                        ?.healthWorkerVitals
-                                        ?.pulseRate
-                                }
-                            </p>
-                        </div>
-
-                        {/* DOCTOR ASSESSMENT */}
-
-                        <div className="form-section">
-                            <h2>
-                                Doctor Assessment
-                            </h2>
-
-                            <textarea
-                                placeholder="Enter your clinical assessment..."
-                                value={assessment}
-                                onChange={(e) =>
-                                    setAssessment(
-                                        e.target.value
-                                    )
-                                }
-                                rows="5"
-                            />
-                        </div>
-
-                        {/* CONSULTATION DECISION */}
-
-                        <div className="form-section">
-                            <h2>
-                                Consultation Decision
-                            </h2>
-
-                            <select
-                                value={decision}
-                                onChange={(e) => {
-                                    setDecision(
-                                        e.target.value
-                                    );
-
-                                    if (
-                                        e.target.value ===
-                                        "referral"
-                                    ) {
-                                        fetchFacilities();
-                                    }
-                                }}
-                            >
-                                <option value="treatment">
-                                    Treatment
-                                </option>
-
-                                <option value="referral">
-                                    Referral
-                                </option>
-                            </select>
-                        </div>
-
-                        {/* PRESCRIPTION */}
-
-                        {decision === "treatment" && (
-                            <div className="form-section">
-                                <h2>
-                                    Prescription
-                                </h2>
-
-                                <textarea
-                                    placeholder="Enter prescription details..."
-                                    value={
-                                        prescription
-                                    }
-                                    onChange={(e) =>
-                                        setPrescription(
-                                            e.target.value
-                                        )
-                                    }
-                                    rows="5"
-                                />
-                            </div>
-                        )}
-
-                        {/* REFERRAL */}
-
-                        {decision === "referral" && (
-                            <>
-                                <div className="form-section">
-                                    <h2>
-                                        Referral Facility
-                                    </h2>
-
-                                    {loadingFacilities ? (
-                                        <p>
-                                            Loading
-                                            facilities...
-                                        </p>
-                                    ) : facilities.length ===
-                                      0 ? (
-                                        <p>
-                                            No active
-                                            referral
-                                            facilities
-                                            available.
-                                        </p>
-                                    ) : (
-                                        <select
-                                            value={
-                                                selectedFacility
-                                            }
-                                            onChange={(e) =>
-                                                setSelectedFacility(
-                                                    e.target
-                                                        .value
-                                                )
-                                            }
-                                        >
-                                            <option value="">
-                                                Select referral
-                                                facility
-                                            </option>
-
-                                            {facilities.map(
-                                                (
-                                                    facility
-                                                ) => (
-                                                    <option
-                                                        key={
-                                                            facility._id
-                                                        }
-                                                        value={
-                                                            facility._id
-                                                        }
-                                                    >
-                                                        {
-                                                            facility.name
-                                                        }{" "}
-                                                        -{" "}
-                                                        {
-                                                            facility.facilityType
-                                                        }{" "}
-                                                        -{" "}
-                                                        {
-                                                            facility.district
-                                                        }
-                                                    </option>
-                                                )
-                                            )}
-                                        </select>
-                                    )}
-                                </div>
-
-                                <div className="form-section">
-                                    <h2>
-                                        Referral Reason
-                                    </h2>
-
-                                    <textarea
-                                        placeholder="Explain why the patient needs referral..."
-                                        value={
-                                            referralReason
-                                        }
-                                        onChange={(e) =>
-                                            setReferralReason(
-                                                e.target
-                                                    .value
-                                            )
-                                        }
-                                        rows="5"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {/* DOCTOR NOTES */}
-
-                        <div className="form-section">
-                            <h2>
-                                Doctor Notes
-                            </h2>
-
-                            <textarea
-                                placeholder="Enter additional notes..."
-                                value={
-                                    doctorNotes
-                                }
-                                onChange={(e) =>
-                                    setDoctorNotes(
-                                        e.target.value
-                                    )
-                                }
-                                rows="4"
-                            />
-                        </div>
-
-                        {/* SAVE BUTTON */}
-
-                        <button
-                            className="submit-button"
-                            onClick={
-                                saveConsultation
-                            }
-                            disabled={
-                                saving ||
-                                (decision ===
-                                    "referral" &&
-                                    loadingFacilities)
-                            }
-                        >
-                            {saving
-                                ? "Saving Consultation..."
-                                : "Save Consultation"}
-                        </button>
-                    </div>
-                )}
-            </div>
+                <footer className="doctor-dashboard-footer">
+                    <span>GramArogya · {tr("doctorDashboard.footer", "Connected care for every community")}</span>
+                    <span>{tr("doctorDashboard.clinicalDisclaimer", "Use clinical judgment and established care protocols.")}</span>
+                </footer>
+            </main>
         </div>
     );
 };

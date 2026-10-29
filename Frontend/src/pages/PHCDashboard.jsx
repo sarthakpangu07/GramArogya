@@ -1,222 +1,246 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "../components/LanguageSelector";
+import "./PHCDashboard.css";
+
+const API_URL = "https://gramarogya-27q3.onrender.com/api";
 
 const PHCDashboard = () => {
+    const { t } = useTranslation();
+
     const [requests, setRequests] = useState([]);
     const [acceptedPatients, setAcceptedPatients] = useState([]);
+    const [emergencyRequests, setEmergencyRequests] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const [acceptedLoading, setAcceptedLoading] = useState(false);
+    const [emergencyLoading, setEmergencyLoading] = useState(false);
+    const [facilityLoading, setFacilityLoading] = useState(true);
 
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
     const [facilityId, setFacilityId] = useState("");
+    const [facilityName, setFacilityName] = useState("");
+
+    const [pendingLoaded, setPendingLoaded] = useState(false);
+    const [acceptedLoaded, setAcceptedLoaded] = useState(false);
+    const [emergencyLoaded, setEmergencyLoaded] = useState(false);
 
     const [acceptingId, setAcceptingId] = useState("");
     const [savingVitalsId, setSavingVitalsId] = useState("");
+    const [updatingEmergencyId, setUpdatingEmergencyId] = useState("");
 
     const [vitals, setVitals] = useState({});
 
-    // Emergency states
-    const [emergencyRequests, setEmergencyRequests] = useState([]);
-    const [emergencyLoading, setEmergencyLoading] = useState(false);
-    const [updatingEmergencyId, setUpdatingEmergencyId] = useState("");
+    const unknown = t("phcDashboard.unknown", {
+        defaultValue: "Not available"
+    });
 
-    useEffect(() => {
-        const fetchFacility = async () => {
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                setError("Please login first.");
-                return;
-            }
-
-            try {
-                const response = await fetch(
-                    "https://gramarogya-27q3.onrender.com/api/facilities/phc",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        data.message || "Failed to fetch facility."
-                    );
-                }
-
-                if (data.facility) {
-                    setFacilityId(data.facility._id);
-                } else {
-                    setError("No healthcare facility found.");
-                }
-            } catch (error) {
-                setError(error.message);
-            }
-        };
-
-        fetchFacility();
-    }, []);
-
-    const fetchPendingRequests = async () => {
+    const clearMessages = () => {
         setError("");
-        setLoading(true);
+        setSuccess("");
+    };
 
-        const token = localStorage.getItem("token");
+    const getToken = () => localStorage.getItem("token");
+
+    const getHeaders = (token, additionalHeaders = {}) => ({
+        Authorization: `Bearer ${token}`,
+        ...additionalHeaders
+    });
+
+    const readResponse = async (response, fallbackMessage) => {
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || fallbackMessage);
+        }
+
+        return data;
+    };
+
+    const fetchFacility = useCallback(async () => {
+        setFacilityLoading(true);
+
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
+            setFacilityLoading(false);
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/facilities/phc`, {
+                headers: getHeaders(token)
+            });
+
+            const data = await readResponse(
+                response,
+                t("phcDashboard.fetchFacilityFailed")
+            );
+
+            if (data.facility) {
+                setFacilityId(data.facility._id);
+                setFacilityName(data.facility.name || "");
+                setError("");
+            } else {
+                setFacilityId("");
+                setFacilityName("");
+                setError(t("phcDashboard.noFacilityFound"));
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setFacilityLoading(false);
+        }
+    }, [t]);
+
+    useEffect(() => {
+        fetchFacility();
+    }, [fetchFacility]);
+
+    const fetchPendingRequests = async () => {
+        clearMessages();
+        setLoading(true);
+
+        const token = getToken();
+
+        if (!token) {
+            setError(t("phcDashboard.loginRequired"));
             setLoading(false);
             return;
         }
 
         if (!facilityId) {
-            setError("Healthcare facility not found.");
+            setError(t("phcDashboard.facilityNotFound"));
             setLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/visits/phc-pending?facilityId=${facilityId}`,
+                `${API_URL}/visits/phc-pending?facilityId=${encodeURIComponent(
+                    facilityId
+                )}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: getHeaders(token)
                 }
             );
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to fetch pending requests."
-                );
-            }
+            const data = await readResponse(
+                response,
+                t("phcDashboard.fetchPendingFailed")
+            );
 
             setRequests(data.visitRequests || []);
-        } catch (error) {
-            setError(error.message);
+            setPendingLoaded(true);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
     const fetchAcceptedPatients = async () => {
-        setError("");
+        clearMessages();
         setAcceptedLoading(true);
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
             setAcceptedLoading(false);
             return;
         }
 
         if (!facilityId) {
-            setError("Healthcare facility not found.");
+            setError(t("phcDashboard.facilityNotFound"));
             setAcceptedLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/visits/phc-accepted?facilityId=${facilityId}`,
+                `${API_URL}/visits/phc-accepted?facilityId=${encodeURIComponent(
+                    facilityId
+                )}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: getHeaders(token)
                 }
             );
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to fetch accepted patients."
-                );
-            }
+            const data = await readResponse(
+                response,
+                t("phcDashboard.fetchAcceptedFailed")
+            );
 
             setAcceptedPatients(data.visitRequests || []);
-        } catch (error) {
-            setError(error.message);
+            setAcceptedLoaded(true);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setAcceptedLoading(false);
         }
     };
 
     const acceptRequest = async (requestId) => {
-        setError("");
+        clearMessages();
         setAcceptingId(requestId);
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
             setAcceptingId("");
             return;
         }
 
         try {
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/visits/${requestId}/accept`,
+                `${API_URL}/visits/${requestId}/accept`,
                 {
                     method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: getHeaders(token)
                 }
             );
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message || "Failed to accept request."
-                );
-            }
-
-            setRequests((currentRequests) =>
-                currentRequests.filter(
-                    (request) => request._id !== requestId
-                )
+            await readResponse(
+                response,
+                t("phcDashboard.acceptRequestFailed")
             );
 
-            alert("Patient request accepted successfully!");
-        } catch (error) {
-            setError(error.message);
+            setRequests((current) =>
+                current.filter((request) => request._id !== requestId)
+            );
+
+            setSuccess(t("phcDashboard.requestAccepted"));
+        } catch (err) {
+            setError(err.message);
         } finally {
             setAcceptingId("");
         }
     };
 
-    const handleVitalsChange = (
-        triageId,
-        field,
-        value
-    ) => {
-        setVitals((currentVitals) => ({
-            ...currentVitals,
+    const handleVitalsChange = (triageId, field, value) => {
+        setVitals((current) => ({
+            ...current,
             [triageId]: {
-                ...currentVitals[triageId],
+                ...current[triageId],
                 [field]: value
             }
         }));
     };
 
     const recordVitals = async (request) => {
-        setError("");
+        clearMessages();
         setSavingVitalsId(request._id);
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
             setSavingVitalsId("");
             return;
         }
@@ -224,7 +248,7 @@ const PHCDashboard = () => {
         const triageId = request.triageRecord?._id;
 
         if (!triageId) {
-            setError("Triage record not found.");
+            setError(t("phcDashboard.triageRecordNotFound"));
             setSavingVitalsId("");
             return;
         }
@@ -232,863 +256,1062 @@ const PHCDashboard = () => {
         const patientVitals = vitals[triageId] || {};
 
         if (
-            !patientVitals.temperature ||
-            !patientVitals.oxygenLevel ||
-            !patientVitals.pulseRate
+            patientVitals.temperature === undefined ||
+            patientVitals.temperature === "" ||
+            patientVitals.oxygenLevel === undefined ||
+            patientVitals.oxygenLevel === "" ||
+            patientVitals.pulseRate === undefined ||
+            patientVitals.pulseRate === ""
+        ) {
+            setError(t("phcDashboard.vitalsRequired"));
+            setSavingVitalsId("");
+            return;
+        }
+
+        const vitalsPayload = {
+            temperature: Number(patientVitals.temperature),
+            oxygenLevel: Number(patientVitals.oxygenLevel),
+            pulseRate: Number(patientVitals.pulseRate),
+            bloodPressure: patientVitals.bloodPressure || "",
+            notes: patientVitals.notes || ""
+        };
+
+        if (
+            !Number.isFinite(vitalsPayload.temperature) ||
+            !Number.isFinite(vitalsPayload.oxygenLevel) ||
+            !Number.isFinite(vitalsPayload.pulseRate)
         ) {
             setError(
-                "Please enter temperature, oxygen level, and pulse rate."
+                t("phcDashboard.invalidVitals", {
+                    defaultValue: "Please enter valid numeric vital readings."
+                })
             );
             setSavingVitalsId("");
             return;
         }
 
         try {
-            const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/triage/${triageId}/vitals`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        temperature: Number(
-                            patientVitals.temperature
-                        ),
-                        oxygenLevel: Number(
-                            patientVitals.oxygenLevel
-                        ),
-                        pulseRate: Number(
-                            patientVitals.pulseRate
-                        ),
-                        bloodPressure:
-                            patientVitals.bloodPressure || "",
-                        notes:
-                            patientVitals.notes || ""
-                    })
-                }
+            const response = await fetch(`${API_URL}/triage/${triageId}/vitals`, {
+                method: "PATCH",
+                headers: getHeaders(token, {
+                    "Content-Type": "application/json"
+                }),
+                body: JSON.stringify(vitalsPayload)
+            });
+
+            await readResponse(
+                response,
+                t("phcDashboard.recordVitalsFailed")
             );
 
-            const data = await response.json();
+            setAcceptedPatients((current) =>
+                current.map((currentRequest) => {
+                    if (currentRequest._id !== request._id) {
+                        return currentRequest;
+                    }
 
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to record vitals."
-                );
-            }
-
-            alert(
-                "Patient vitals recorded successfully!"
-            );
-
-            setAcceptedPatients(
-                (currentPatients) =>
-                    currentPatients.map(
-                        (currentRequest) => {
-                            if (
-                                currentRequest._id !==
-                                request._id
-                            ) {
-                                return currentRequest;
-                            }
-
-                            return {
-                                ...currentRequest,
-                                triageRecord: {
-                                    ...currentRequest.triageRecord,
-                                    vitalsStatus:
-                                        "recorded",
-                                    healthWorkerVitals: {
-                                        temperature:
-                                            Number(
-                                                patientVitals.temperature
-                                            ),
-                                        oxygenLevel:
-                                            Number(
-                                                patientVitals.oxygenLevel
-                                            ),
-                                        pulseRate:
-                                            Number(
-                                                patientVitals.pulseRate
-                                            ),
-                                        bloodPressure:
-                                            patientVitals.bloodPressure ||
-                                            "",
-                                        notes:
-                                            patientVitals.notes ||
-                                            ""
-                                    }
-                                }
-                            };
+                    return {
+                        ...currentRequest,
+                        triageRecord: {
+                            ...currentRequest.triageRecord,
+                            vitalsStatus: "recorded",
+                            healthWorkerVitals: vitalsPayload
                         }
-                    )
+                    };
+                })
             );
-        } catch (error) {
-            setError(error.message);
+
+            setSuccess(t("phcDashboard.vitalsRecorded"));
+        } catch (err) {
+            setError(err.message);
         } finally {
             setSavingVitalsId("");
         }
     };
 
-    // Fetch emergency requests
     const fetchEmergencyRequests = async () => {
-        setError("");
+        clearMessages();
         setEmergencyLoading(true);
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
             setEmergencyLoading(false);
             return;
         }
 
         if (!facilityId) {
-            setError("Healthcare facility not found.");
+            setError(t("phcDashboard.facilityNotFound"));
             setEmergencyLoading(false);
             return;
         }
 
         try {
             const response = await fetch(
-                "https://gramarogya-27q3.onrender.com/api/emergencies/phc-pending",
+                `${API_URL}/emergencies/phc-pending`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    headers: getHeaders(token)
                 }
             );
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to fetch emergency requests."
-                );
-            }
-
-            const facilityEmergencyRequests =
-                (data.emergencyRequests || []).filter(
-                    (request) =>
-                        request.requestedFacility?._id ===
-                        facilityId
-                );
-
-            setEmergencyRequests(
-                facilityEmergencyRequests
+            const data = await readResponse(
+                response,
+                t("phcDashboard.fetchEmergencyFailed")
             );
-        } catch (error) {
-            setError(error.message);
+
+            const facilityEmergencyRequests = (
+                data.emergencyRequests || []
+            ).filter((request) => {
+                const requestedFacilityId =
+                    request.requestedFacility?._id ||
+                    request.requestedFacility;
+
+                return String(requestedFacilityId || "") === String(facilityId);
+            });
+
+            setEmergencyRequests(facilityEmergencyRequests);
+            setEmergencyLoaded(true);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setEmergencyLoading(false);
         }
     };
 
-    // Update emergency status
-    const updateEmergencyStatus = async (
-        emergencyId,
-        status
-    ) => {
-        setError("");
+    const updateEmergencyStatus = async (emergencyId, status) => {
+        clearMessages();
         setUpdatingEmergencyId(emergencyId);
 
-        const token = localStorage.getItem("token");
+        const token = getToken();
 
         if (!token) {
-            setError("Please login first.");
+            setError(t("phcDashboard.loginRequired"));
             setUpdatingEmergencyId("");
             return;
         }
 
         try {
             const response = await fetch(
-                `https://gramarogya-27q3.onrender.com/api/emergencies/${emergencyId}/status`,
+                `${API_URL}/emergencies/${emergencyId}/status`,
                 {
                     method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        status
-                    })
+                    headers: getHeaders(token, {
+                        "Content-Type": "application/json"
+                    }),
+                    body: JSON.stringify({ status })
                 }
             );
 
-            const data = await response.json();
+            await readResponse(
+                response,
+                t("phcDashboard.updateEmergencyFailed")
+            );
 
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                        "Failed to update emergency status."
-                );
-            }
-
-            if (
-                status === "completed" ||
-                status === "cancelled"
-            ) {
-                setEmergencyRequests(
-                    (currentRequests) =>
-                        currentRequests.filter(
-                            (request) =>
-                                request._id !== emergencyId
-                        )
+            if (status === "completed" || status === "cancelled") {
+                setEmergencyRequests((current) =>
+                    current.filter((request) => request._id !== emergencyId)
                 );
             } else {
-                setEmergencyRequests(
-                    (currentRequests) =>
-                        currentRequests.map(
-                            (request) =>
-                                request._id === emergencyId
-                                    ? {
-                                          ...request,
-                                          status
-                                      }
-                                    : request
-                        )
+                setEmergencyRequests((current) =>
+                    current.map((request) =>
+                        request._id === emergencyId
+                            ? { ...request, status }
+                            : request
+                    )
                 );
             }
 
-            alert(
-                `Emergency status updated to ${status}.`
+            setSuccess(
+                t("phcDashboard.emergencyStatusUpdated", {
+                    status,
+                    defaultValue: `Emergency status updated to ${status}.`
+                })
             );
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setUpdatingEmergencyId("");
         }
     };
 
-    return (
-        <div className="triage-page">
-            <div className="triage-container">
+    const InfoItem = ({ label, value }) => (
+        <div className="phc-info-item">
+            <span className="phc-info-label">{label}</span>
+            <span className="phc-info-value">
+                {value === undefined || value === null || value === ""
+                    ? t("phcDashboard.notAvailable", {
+                          defaultValue: "Not available"
+                      })
+                    : value}
+            </span>
+        </div>
+    );
 
-                <h1>PHC Dashboard</h1>
+    const PatientIdentity = ({ request }) => (
+        <div className="phc-patient-identity">
+            <div className="phc-avatar" aria-hidden="true">
+                {(request.patient?.name || "?").charAt(0).toUpperCase()}
+            </div>
 
-                <p className="triage-subtitle">
-                    Manage patient visit requests and
-                    review triage information.
+            <div className="phc-patient-name-wrap">
+                <h3>
+                    {request.patient?.name ||
+                        t("phcDashboard.unknown", { defaultValue: "Unknown" })}
+                </h3>
+                <p>
+                    {request.patient?.email ||
+                        t("phcDashboard.unknown", { defaultValue: "Unknown" })}
                 </p>
+            </div>
+        </div>
+    );
 
-                {/* Pending Requests */}
+    const UrgencyBadge = ({ value }) => {
+        const normalized = String(value || "").toLowerCase();
+        let urgencyClass = "phc-badge-neutral";
 
-                <button
-                    className="submit-button"
-                    onClick={fetchPendingRequests}
-                    disabled={loading}
-                >
-                    {loading
-                        ? "Loading requests..."
-                        : "View Pending Requests"}
-                </button>
+        if (
+            normalized.includes("emergency") ||
+            normalized.includes("critical") ||
+            normalized.includes("high") ||
+            normalized.includes("severe")
+        ) {
+            urgencyClass = "phc-badge-danger";
+        } else if (
+            normalized.includes("moderate") ||
+            normalized.includes("urgent")
+        ) {
+            urgencyClass = "phc-badge-warning";
+        } else if (
+            normalized.includes("low") ||
+            normalized.includes("routine") ||
+            normalized.includes("mild")
+        ) {
+            urgencyClass = "phc-badge-success";
+        }
 
-                {/* Accepted Patients */}
+        return (
+            <span className={`phc-badge ${urgencyClass}`}>
+                {value ||
+                    t("phcDashboard.notAvailable", {
+                        defaultValue: "Not available"
+                    })}
+            </span>
+        );
+    };
 
-                <button
-                    className="submit-button"
-                    onClick={fetchAcceptedPatients}
-                    disabled={acceptedLoading}
-                    style={{ marginTop: "10px" }}
-                >
-                    {acceptedLoading
-                        ? "Loading patients..."
-                        : "View Accepted Patients"}
-                </button>
+    const SectionHeading = ({ eyebrow, title, description, count, children }) => (
+        <div className="phc-section-heading">
+            <div className="phc-section-heading-text">
+                {eyebrow && <span className="phc-eyebrow">{eyebrow}</span>}
+                <div className="phc-section-title-row">
+                    <h2>{title}</h2>
+                    {count !== undefined && (
+                        <span className="phc-count-badge">{count}</span>
+                    )}
+                </div>
+                {description && <p>{description}</p>}
+            </div>
+            {children && <div className="phc-section-heading-action">{children}</div>}
+        </div>
+    );
 
-                {/* Emergency Requests */}
+    const EmptyState = ({ icon, title, description }) => (
+        <div className="phc-empty-state">
+            <div className="phc-empty-icon" aria-hidden="true">
+                {icon}
+            </div>
+            <h3>{title}</h3>
+            <p>{description}</p>
+        </div>
+    );
 
-                <button
-                    className="submit-button"
-                    onClick={fetchEmergencyRequests}
-                    disabled={emergencyLoading}
-                    style={{
-                        marginTop: "10px"
-                    }}
-                >
-                    {emergencyLoading
-                        ? "Loading emergency requests..."
-                        : "🚨 View Emergency Requests"}
-                </button>
+    return (
+        <main className="phc-dashboard">
+            <div className="phc-dashboard-shell">
+                <header className="phc-dashboard-header">
+                    <div className="phc-brand-mark" aria-hidden="true">
+                        +
+                    </div>
+
+                    <div className="phc-header-copy">
+                        <span className="phc-eyebrow">
+                            {t("phcDashboard.facilityLabel", {
+                                defaultValue: "PRIMARY HEALTHCARE"
+                            })}
+                        </span>
+                        <h1>{t("phcDashboard.title")}</h1>
+                        <p>
+                            {t("phcDashboard.subtitle")}
+                        </p>
+                    </div>
+
+                    <div className="phc-header-actions">
+                        <LanguageSelector />
+                        <div className="phc-facility-pill">
+                            <span className="phc-live-dot" />
+                            <span>
+                                {facilityLoading
+                                    ? t("phcDashboard.loadingFacility", {
+                                          defaultValue: "Loading facility..."
+                                      })
+                                    : facilityName ||
+                                      t("phcDashboard.assignedFacility", {
+                                          defaultValue: "Assigned PHC"
+                                      })}
+                            </span>
+                        </div>
+                    </div>
+                </header>
+
+                <section className="phc-welcome-panel">
+                    <div>
+                        <span className="phc-welcome-label">
+                            {t("phcDashboard.workspaceLabel", {
+                                defaultValue: "HEALTHCARE WORKSPACE"
+                            })}
+                        </span>
+                        <h2>
+                            {t("phcDashboard.workspaceTitle", {
+                                defaultValue: "Patient care overview"
+                            })}
+                        </h2>
+                        <p>
+                            {t("phcDashboard.workspaceDescription", {
+                                defaultValue:
+                                    "Manage incoming visits, record patient vitals, and respond to emergencies assigned to your facility."
+                            })}
+                        </p>
+                    </div>
+                    <div className="phc-welcome-icon" aria-hidden="true">
+                        🏥
+                    </div>
+                </section>
+
+                <section className="phc-stats-grid" aria-label="Dashboard counts">
+                    <article className="phc-stat-card">
+                        <div className="phc-stat-icon phc-stat-blue">👥</div>
+                        <div>
+                            <span>{t("phcDashboard.pendingPatientRequests")}</span>
+                            <strong>{requests.length}</strong>
+                            <small>
+                                {t("phcDashboard.pendingStatCaption", {
+                                    defaultValue: "Awaiting review"
+                                })}
+                            </small>
+                        </div>
+                    </article>
+
+                    <article className="phc-stat-card">
+                        <div className="phc-stat-icon phc-stat-green">🩺</div>
+                        <div>
+                            <span>{t("phcDashboard.acceptedPatients")}</span>
+                            <strong>{acceptedPatients.length}</strong>
+                            <small>
+                                {t("phcDashboard.acceptedStatCaption", {
+                                    defaultValue: "Patients in your queue"
+                                })}
+                            </small>
+                        </div>
+                    </article>
+
+                    <article className="phc-stat-card phc-stat-emergency">
+                        <div className="phc-stat-icon phc-stat-red">🚨</div>
+                        <div>
+                            <span>{t("phcDashboard.emergencyRequests")}</span>
+                            <strong>{emergencyRequests.length}</strong>
+                            <small>
+                                {t("phcDashboard.emergencyStatCaption", {
+                                    defaultValue: "Requests assigned to this PHC"
+                                })}
+                            </small>
+                        </div>
+                    </article>
+                </section>
+
+                {facilityLoading && (
+                    <div className="phc-inline-notice phc-notice-neutral">
+                        <span className="phc-spinner" />
+                        {t("phcDashboard.loadingFacility", {
+                            defaultValue: "Loading facility..."
+                        })}
+                    </div>
+                )}
 
                 {error && (
-                    <div className="error-message">
-                        {error}
+                    <div className="phc-inline-notice phc-notice-error" role="alert">
+                        <span className="phc-notice-symbol">!</span>
+                        <span>{error}</span>
+                        <button
+                            type="button"
+                            className="phc-dismiss-button"
+                            onClick={() => setError("")}
+                            aria-label="Dismiss error"
+                        >
+                            ×
+                        </button>
                     </div>
                 )}
 
-                {/* Pending Patient Requests */}
+                {success && (
+                    <div
+                        className="phc-inline-notice phc-notice-success"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span className="phc-notice-symbol">✓</span>
+                        <span>{success}</span>
+                        <button
+                            type="button"
+                            className="phc-dismiss-button"
+                            onClick={() => setSuccess("")}
+                            aria-label="Dismiss message"
+                        >
+                            ×
+                        </button>
+                    </div>
+                )}
 
-                {requests.length > 0 && (
-                    <div style={{ marginTop: "30px" }}>
-
+                <section className="phc-quick-actions">
+                    <div className="phc-quick-actions-copy">
                         <h2>
-                            Pending Patient Requests
+                            {t("phcDashboard.quickActionsTitle", {
+                                defaultValue: "Manage your queues"
+                            })}
                         </h2>
+                        <p>
+                            {t("phcDashboard.quickActionsDescription", {
+                                defaultValue:
+                                    "Choose a queue to retrieve the latest requests from the server."
+                            })}
+                        </p>
+                    </div>
 
-                        {requests.map((request) => (
-                            <div
-                                key={request._id}
-                                style={{
-                                    border: "1px solid #ccc",
-                                    borderRadius: "10px",
-                                    padding: "20px",
-                                    marginTop: "15px"
-                                }}
+                    <div className="phc-action-buttons">
+                        <button
+                            type="button"
+                            className="phc-button phc-button-primary"
+                            onClick={fetchPendingRequests}
+                            disabled={loading || facilityLoading}
+                        >
+                            {loading && <span className="phc-spinner" />}
+                            {loading
+                                ? t("phcDashboard.loadingRequests")
+                                : t("phcDashboard.viewPendingRequests")}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="phc-button phc-button-secondary"
+                            onClick={fetchAcceptedPatients}
+                            disabled={acceptedLoading || facilityLoading}
+                        >
+                            {acceptedLoading && <span className="phc-spinner" />}
+                            {acceptedLoading
+                                ? t("phcDashboard.loadingPatients")
+                                : t("phcDashboard.viewAcceptedPatients")}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="phc-button phc-button-emergency"
+                            onClick={fetchEmergencyRequests}
+                            disabled={emergencyLoading || facilityLoading}
+                        >
+                            {emergencyLoading && <span className="phc-spinner" />}
+                            {!emergencyLoading && <span aria-hidden="true">🚨</span>}
+                            {emergencyLoading
+                                ? t("phcDashboard.loadingEmergencyRequests")
+                                : t("phcDashboard.viewEmergencyRequests")}
+                        </button>
+                    </div>
+                </section>
+
+                {/* Pending patient visit requests */}
+                {(requests.length > 0 || pendingLoaded) && (
+                    <section className="phc-content-section">
+                        <SectionHeading
+                            eyebrow={t("phcDashboard.pendingEyebrow", {
+                                defaultValue: "NEW ARRIVALS"
+                            })}
+                            title={t("phcDashboard.pendingPatientRequests")}
+                            description={t("phcDashboard.pendingDescription", {
+                                defaultValue:
+                                    "Review the patient's triage information before accepting the visit."
+                            })}
+                            count={requests.length}
                             >
-                                <h3>
-                                    Patient:{" "}
-                                    {request.patient?.name ||
-                                        "Unknown"}
-                                </h3>
+                            <button
+                                type="button"
+                                className="phc-button phc-button-light"
+                                onClick={fetchPendingRequests}
+                                disabled={loading}
+                            >
+                                {loading
+                                    ? t("phcDashboard.loadingRequests")
+                                    : t("phcDashboard.refresh", {
+                                          defaultValue: "Refresh"
+                                      })}
+                            </button>
+                        </SectionHeading>
 
-                                <p>
-                                    <strong>
-                                        Email:
-                                    </strong>{" "}
-                                    {request.patient?.email ||
-                                        "Unknown"}
-                                </p>
+                        {requests.length === 0 ? (
+                            <EmptyState
+                                icon="✓"
+                                title={t("phcDashboard.noPendingTitle", {
+                                    defaultValue: "No pending visit requests"
+                                })}
+                                description={t("phcDashboard.noPendingVisits", {
+                                    defaultValue:
+                                        "New patient requests will appear here when available."
+                                })}
+                            />
+                        ) : (
+                            <div className="phc-card-grid">
+                                {requests.map((request) => (
+                                    <article
+                                        key={request._id}
+                                        className="phc-patient-card"
+                                    >
+                                        <div className="phc-card-topline">
+                                            <span className="phc-card-category">
+                                                {t("phcDashboard.visitRequestLabel", {
+                                                    defaultValue: "VISIT REQUEST"
+                                                })}
+                                            </span>
+                                            <span className="phc-badge phc-badge-neutral">
+                                                {request.status}
+                                            </span>
+                                        </div>
 
-                                <p>
-                                    <strong>
-                                        Symptoms:
-                                    </strong>{" "}
-                                    {request.triageRecord?.symptoms?.join(
-                                        ", "
-                                    ) ||
-                                        "Not available"}
-                                </p>
+                                        <PatientIdentity request={request} />
 
-                                <p>
-                                    <strong>
-                                        Duration:
-                                    </strong>{" "}
-                                    {request.triageRecord
-                                        ?.duration ||
-                                        "Not available"}
-                                </p>
+                                        <div className="phc-detail-grid">
+                                            <InfoItem
+                                                label={t("phcDashboard.symptoms")}
+                                                value={request.triageRecord?.symptoms?.join(", ")}
+                                            />
+                                            <InfoItem
+                                                label={t("phcDashboard.duration")}
+                                                value={request.triageRecord?.duration}
+                                            />
+                                            <InfoItem
+                                                label={t("phcDashboard.severity")}
+                                                value={request.triageRecord?.severity}
+                                            />
+                                            <div className="phc-info-item">
+                                                <span className="phc-info-label">
+                                                    {t("phcDashboard.urgency")}
+                                                </span>
+                                                <UrgencyBadge
+                                                    value={request.triageRecord?.urgencyLevel}
+                                                />
+                                            </div>
+                                        </div>
 
-                                <p>
-                                    <strong>
-                                        Severity:
-                                    </strong>{" "}
-                                    {request.triageRecord
-                                        ?.severity ||
-                                        "Not available"}
-                                </p>
+                                        <div className="phc-recommendation">
+                                            <span>
+                                                {t("phcDashboard.recommendedAction")}
+                                            </span>
+                                            <p>
+                                                {request.triageRecord?.recommendedAction ||
+                                                    unknown}
+                                            </p>
+                                        </div>
 
-                                <p>
-                                    <strong>
-                                        Urgency:
-                                    </strong>{" "}
-                                    {request.triageRecord
-                                        ?.urgencyLevel ||
-                                        "Not available"}
-                                </p>
-
-                                <p>
-                                    <strong>
-                                        Recommended Action:
-                                    </strong>{" "}
-                                    {request.triageRecord
-                                        ?.recommendedAction ||
-                                        "Not available"}
-                                </p>
-
-                                <p>
-                                    <strong>
-                                        Status:
-                                    </strong>{" "}
-                                    {request.status}
-                                </p>
-
-                                <button
-                                    className="submit-button"
-                                    onClick={() =>
-                                        acceptRequest(
-                                            request._id
-                                        )
-                                    }
-                                    disabled={
-                                        acceptingId ===
-                                        request._id
-                                    }
-                                >
-                                    {acceptingId ===
-                                    request._id
-                                        ? "Accepting..."
-                                        : "Accept Patient"}
-                                </button>
+                                        <div className="phc-card-footer">
+                                            <span className="phc-muted-caption">
+                                                {t("phcDashboard.reviewBeforeAccepting", {
+                                                    defaultValue:
+                                                        "Review the available triage details before accepting."
+                                                })}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="phc-button phc-button-primary"
+                                                onClick={() => acceptRequest(request._id)}
+                                                disabled={acceptingId === request._id}
+                                            >
+                                                {acceptingId === request._id && (
+                                                    <span className="phc-spinner" />
+                                                )}
+                                                {acceptingId === request._id
+                                                    ? t("phcDashboard.accepting")
+                                                    : t("phcDashboard.acceptPatient")}
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Accepted Patients */}
-
-                {acceptedPatients.length > 0 && (
-                    <div style={{ marginTop: "30px" }}>
-
-                        <h2>
-                            Accepted Patients
-                        </h2>
-
-                        {acceptedPatients.map(
-                            (request) => {
-                                const triageId =
-                                    request
-                                        .triageRecord?._id;
-
-                                const patientVitals =
-                                    vitals[triageId] || {};
-
-                                const vitalsRecorded =
-                                    request
-                                        .triageRecord
-                                        ?.vitalsStatus ===
-                                    "recorded";
-
-                                return (
-                                    <div
-                                        key={request._id}
-                                        style={{
-                                            border: "1px solid #ccc",
-                                            borderRadius: "10px",
-                                            padding: "20px",
-                                            marginTop: "15px"
-                                        }}
-                                    >
-
-                                        <h3>
-                                            Patient:{" "}
-                                            {request.patient
-                                                ?.name ||
-                                                "Unknown"}
-                                        </h3>
-
-                                        <p>
-                                            <strong>
-                                                Email:
-                                            </strong>{" "}
-                                            {request.patient
-                                                ?.email ||
-                                                "Unknown"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Symptoms:
-                                            </strong>{" "}
-                                            {request
-                                                .triageRecord
-                                                ?.symptoms?.join(
-                                                    ", "
-                                                ) ||
-                                                "Not available"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Severity:
-                                            </strong>{" "}
-                                            {request
-                                                .triageRecord
-                                                ?.severity ||
-                                                "Not available"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Urgency:
-                                            </strong>{" "}
-                                            {request
-                                                .triageRecord
-                                                ?.urgencyLevel ||
-                                                "Not available"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Status:
-                                            </strong>{" "}
-                                            {request.status}
-                                        </p>
-
-                                        {vitalsRecorded ? (
-                                            <div
-                                                style={{
-                                                    marginTop:
-                                                        "20px",
-                                                    padding:
-                                                        "15px",
-                                                    borderRadius:
-                                                        "8px",
-                                                    background:
-                                                        "#f5f5f5"
-                                                }}
-                                            >
-                                                <h3>
-                                                    Vitals
-                                                    Recorded
-                                                </h3>
-
-                                                <p>
-                                                    <strong>
-                                                        Temperature:
-                                                    </strong>{" "}
-                                                    {
-                                                        request
-                                                            .triageRecord
-                                                            ?.healthWorkerVitals
-                                                            ?.temperature
-                                                    }
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Oxygen Level:
-                                                    </strong>{" "}
-                                                    {
-                                                        request
-                                                            .triageRecord
-                                                            ?.healthWorkerVitals
-                                                            ?.oxygenLevel
-                                                    }
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Pulse Rate:
-                                                    </strong>{" "}
-                                                    {
-                                                        request
-                                                            .triageRecord
-                                                            ?.healthWorkerVitals
-                                                            ?.pulseRate
-                                                    }
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Blood Pressure:
-                                                    </strong>{" "}
-                                                    {
-                                                        request
-                                                            .triageRecord
-                                                            ?.healthWorkerVitals
-                                                            ?.bloodPressure ||
-                                                        "Not provided"
-                                                    }
-                                                </p>
-
-                                                <p>
-                                                    <strong>
-                                                        Notes:
-                                                    </strong>{" "}
-                                                    {
-                                                        request
-                                                            .triageRecord
-                                                            ?.healthWorkerVitals
-                                                            ?.notes ||
-                                                        "No notes"
-                                                    }
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div
-                                                style={{
-                                                    marginTop:
-                                                        "20px"
-                                                }}
-                                            >
-                                                <h3>
-                                                    Record
-                                                    Patient
-                                                    Vitals
-                                                </h3>
-
-                                                <div className="form-section">
-                                                    <h2>
-                                                        Temperature
-                                                    </h2>
-
-                                                    <input
-                                                        type="number"
-                                                        step="0.1"
-                                                        placeholder="e.g. 98.6"
-                                                        value={
-                                                            patientVitals.temperature ||
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleVitalsChange(
-                                                                triageId,
-                                                                "temperature",
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <div className="form-section">
-                                                    <h2>
-                                                        Oxygen
-                                                        Level
-                                                        (SpO₂)
-                                                    </h2>
-
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        placeholder="e.g. 97"
-                                                        value={
-                                                            patientVitals.oxygenLevel ||
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleVitalsChange(
-                                                                triageId,
-                                                                "oxygenLevel",
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <div className="form-section">
-                                                    <h2>
-                                                        Pulse
-                                                        Rate
-                                                    </h2>
-
-                                                    <input
-                                                        type="number"
-                                                        step="1"
-                                                        placeholder="e.g. 80"
-                                                        value={
-                                                            patientVitals.pulseRate ||
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleVitalsChange(
-                                                                triageId,
-                                                                "pulseRate",
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <div className="form-section">
-                                                    <h2>
-                                                        Blood
-                                                        Pressure
-                                                    </h2>
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="e.g. 120/80"
-                                                        value={
-                                                            patientVitals.bloodPressure ||
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleVitalsChange(
-                                                                triageId,
-                                                                "bloodPressure",
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <div className="form-section">
-                                                    <h2>
-                                                        Notes
-                                                    </h2>
-
-                                                    <textarea
-                                                        placeholder="Enter additional observations"
-                                                        value={
-                                                            patientVitals.notes ||
-                                                            ""
-                                                        }
-                                                        onChange={(
-                                                            e
-                                                        ) =>
-                                                            handleVitalsChange(
-                                                                triageId,
-                                                                "notes",
-                                                                e
-                                                                    .target
-                                                                    .value
-                                                            )
-                                                        }
-                                                    />
-                                                </div>
-
-                                                <button
-                                                    className="submit-button"
-                                                    onClick={() =>
-                                                        recordVitals(
-                                                            request
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        savingVitalsId ===
-                                                        request._id
-                                                    }
-                                                >
-                                                    {savingVitalsId ===
-                                                    request._id
-                                                        ? "Saving Vitals..."
-                                                        : "Save Vitals"}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            }
                         )}
-                    </div>
+                    </section>
                 )}
 
-                {/* Emergency Requests */}
+                {/* Accepted patients and vital recording */}
+                {(acceptedPatients.length > 0 || acceptedLoaded) && (
+                    <section className="phc-content-section">
+                        <SectionHeading
+                            eyebrow={t("phcDashboard.activeCareEyebrow", {
+                                defaultValue: "ACTIVE CARE"
+                            })}
+                            title={t("phcDashboard.acceptedPatients")}
+                            description={t("phcDashboard.acceptedDescription", {
+                                defaultValue:
+                                    "Review accepted patients and record the vitals measured at your facility."
+                            })}
+                            count={acceptedPatients.length}
+                        >
+                            <button
+                                type="button"
+                                className="phc-button phc-button-light"
+                                onClick={fetchAcceptedPatients}
+                                disabled={acceptedLoading}
+                            >
+                                {acceptedLoading
+                                    ? t("phcDashboard.loadingPatients")
+                                    : t("phcDashboard.refresh", {
+                                          defaultValue: "Refresh"
+                                      })}
+                            </button>
+                        </SectionHeading>
 
-                <div
-                    style={{
-                        marginTop: "40px"
-                    }}
-                >
-                    {emergencyRequests.length > 0 && (
-                        <div>
-                            <h2>
-                                🚨 Emergency Requests
-                            </h2>
+                        {acceptedPatients.length === 0 ? (
+                            <EmptyState
+                                icon="🩺"
+                                title={t("phcDashboard.noAcceptedTitle", {
+                                    defaultValue: "No accepted patients"
+                                })}
+                                description={t("phcDashboard.noAcceptedVisits", {
+                                    defaultValue:
+                                        "Accepted visits will appear here for vital recording."
+                                })}
+                            />
+                        ) : (
+                            <div className="phc-card-grid">
+                                {acceptedPatients.map((request) => {
+                                    const triageId = request.triageRecord?._id;
+                                    const patientVitals = vitals[triageId] || {};
+                                    const vitalsRecorded =
+                                        request.triageRecord?.vitalsStatus === "recorded";
+                                    const recordedVitals =
+                                        request.triageRecord?.healthWorkerVitals || {};
 
-                            {emergencyRequests.map(
-                                (request) => (
-                                    <div
+                                    return (
+                                        <article
+                                            key={request._id}
+                                            className="phc-patient-card phc-accepted-card"
+                                        >
+                                            <div className="phc-card-topline">
+                                                <span className="phc-card-category">
+                                                    {t("phcDashboard.patientCareLabel", {
+                                                        defaultValue: "PATIENT CARE"
+                                                    })}
+                                                </span>
+                                                <span
+                                                    className={`phc-badge ${
+                                                        vitalsRecorded
+                                                            ? "phc-badge-success"
+                                                            : "phc-badge-warning"
+                                                    }`}
+                                                >
+                                                    {vitalsRecorded
+                                                        ? t("phcDashboard.vitalsComplete", {
+                                                              defaultValue: "Vitals recorded"
+                                                          })
+                                                        : t("phcDashboard.vitalsPending", {
+                                                              defaultValue: "Vitals pending"
+                                                          })}
+                                                </span>
+                                            </div>
+
+                                            <PatientIdentity request={request} />
+
+                                            <div className="phc-detail-grid">
+                                                <InfoItem
+                                                    label={t("phcDashboard.symptoms")}
+                                                    value={request.triageRecord?.symptoms?.join(", ")}
+                                                />
+                                                <InfoItem
+                                                    label={t("phcDashboard.severity")}
+                                                    value={request.triageRecord?.severity}
+                                                />
+                                                <div className="phc-info-item">
+                                                    <span className="phc-info-label">
+                                                        {t("phcDashboard.urgency")}
+                                                    </span>
+                                                    <UrgencyBadge
+                                                        value={request.triageRecord?.urgencyLevel}
+                                                    />
+                                                </div>
+                                                <InfoItem
+                                                    label={t("phcDashboard.status")}
+                                                    value={request.status}
+                                                />
+                                            </div>
+
+                                            {vitalsRecorded ? (
+                                                <div className="phc-recorded-vitals">
+                                                    <div className="phc-subsection-heading">
+                                                        <div>
+                                                            <span className="phc-eyebrow">
+                                                                {t("phcDashboard.completedLabel", {
+                                                                    defaultValue: "COMPLETED"
+                                                                })}
+                                                            </span>
+                                                            <h4>
+                                                                {t("phcDashboard.vitalsRecordedHeading")}
+                                                            </h4>
+                                                        </div>
+                                                        <span className="phc-check-mark">✓</span>
+                                                    </div>
+
+                                                    <div className="phc-vitals-readings">
+                                                        <div>
+                                                            <span>
+                                                                {t("phcDashboard.temperature")}
+                                                            </span>
+                                                            <strong>
+                                                                {recordedVitals.temperature ?? unknown}
+                                                                {recordedVitals.temperature !== undefined &&
+                                                                    recordedVitals.temperature !== null
+                                                                    ? " °C"
+                                                                    : ""}
+                                                            </strong>
+                                                        </div>
+                                                        <div>
+                                                            <span>
+                                                                {t("phcDashboard.oxygenLevel")}
+                                                            </span>
+                                                            <strong>
+                                                                {recordedVitals.oxygenLevel ?? unknown}
+                                                                {recordedVitals.oxygenLevel !== undefined &&
+                                                                    recordedVitals.oxygenLevel !== null
+                                                                    ? "%"
+                                                                    : ""}
+                                                            </strong>
+                                                        </div>
+                                                        <div>
+                                                            <span>
+                                                                {t("phcDashboard.pulseRate")}
+                                                            </span>
+                                                            <strong>
+                                                                {recordedVitals.pulseRate ?? unknown}
+                                                                {recordedVitals.pulseRate !== undefined &&
+                                                                    recordedVitals.pulseRate !== null
+                                                                    ? " bpm"
+                                                                    : ""}
+                                                            </strong>
+                                                        </div>
+                                                        <div>
+                                                            <span>
+                                                                {t("phcDashboard.bloodPressure")}
+                                                            </span>
+                                                            <strong>
+                                                                {recordedVitals.bloodPressure || unknown}
+                                                            </strong>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="phc-recorded-notes">
+                                                        <strong>
+                                                            {t("phcDashboard.notes")}
+                                                        </strong>
+                                                        <p>
+                                                            {recordedVitals.notes ||
+                                                                t("phcDashboard.noNotes")}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="phc-vitals-form">
+                                                    <div className="phc-subsection-heading">
+                                                        <div>
+                                                            <span className="phc-eyebrow">
+                                                                {t("phcDashboard.vitalsFormEyebrow", {
+                                                                    defaultValue: "CLINICAL OBSERVATIONS"
+                                                                })}
+                                                            </span>
+                                                            <h4>
+                                                                {t("phcDashboard.recordPatientVitals")}
+                                                            </h4>
+                                                        </div>
+                                                        <span className="phc-vitals-form-icon">
+                                                            ♥
+                                                        </span>
+                                                    </div>
+
+                                                    {!triageId && (
+                                                        <p className="phc-field-warning">
+                                                            {t("phcDashboard.triageRecordNotFound")}
+                                                        </p>
+                                                    )}
+
+                                                    <div className="phc-form-grid">
+                                                        <div className="phc-form-field">
+                                                            <label htmlFor={`temp-${request._id}`}>
+                                                                {t("phcDashboard.temperature")} (°C)
+                                                            </label>
+                                                            <input
+                                                                id={`temp-${request._id}`}
+                                                                type="number"
+                                                                step="0.1"
+                                                                inputMode="decimal"
+                                                                placeholder={t(
+                                                                    "phcDashboard.temperaturePlaceholder"
+                                                                )}
+                                                                value={patientVitals.temperature ?? ""}
+                                                                onChange={(e) =>
+                                                                    handleVitalsChange(
+                                                                        triageId,
+                                                                        "temperature",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={!triageId}
+                                                            />
+                                                        </div>
+
+                                                        <div className="phc-form-field">
+                                                            <label htmlFor={`oxygen-${request._id}`}>
+                                                                {t("phcDashboard.oxygenLevelWithUnit")}
+                                                            </label>
+                                                            <input
+                                                                id={`oxygen-${request._id}`}
+                                                                type="number"
+                                                                step="1"
+                                                                inputMode="numeric"
+                                                                placeholder={t(
+                                                                    "phcDashboard.oxygenPlaceholder"
+                                                                )}
+                                                                value={patientVitals.oxygenLevel ?? ""}
+                                                                onChange={(e) =>
+                                                                    handleVitalsChange(
+                                                                        triageId,
+                                                                        "oxygenLevel",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={!triageId}
+                                                            />
+                                                        </div>
+
+                                                        <div className="phc-form-field">
+                                                            <label htmlFor={`pulse-${request._id}`}>
+                                                                {t("phcDashboard.pulseRate")} (bpm)
+                                                            </label>
+                                                            <input
+                                                                id={`pulse-${request._id}`}
+                                                                type="number"
+                                                                step="1"
+                                                                inputMode="numeric"
+                                                                placeholder={t(
+                                                                    "phcDashboard.pulsePlaceholder"
+                                                                )}
+                                                                value={patientVitals.pulseRate ?? ""}
+                                                                onChange={(e) =>
+                                                                    handleVitalsChange(
+                                                                        triageId,
+                                                                        "pulseRate",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={!triageId}
+                                                            />
+                                                        </div>
+
+                                                        <div className="phc-form-field">
+                                                            <label htmlFor={`bp-${request._id}`}>
+                                                                {t("phcDashboard.bloodPressure")}
+                                                            </label>
+                                                            <input
+                                                                id={`bp-${request._id}`}
+                                                                type="text"
+                                                                placeholder={t(
+                                                                    "phcDashboard.bloodPressurePlaceholder"
+                                                                )}
+                                                                value={patientVitals.bloodPressure || ""}
+                                                                onChange={(e) =>
+                                                                    handleVitalsChange(
+                                                                        triageId,
+                                                                        "bloodPressure",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={!triageId}
+                                                            />
+                                                        </div>
+
+                                                        <div className="phc-form-field phc-form-field-full">
+                                                            <label htmlFor={`notes-${request._id}`}>
+                                                                {t("phcDashboard.notes")}
+                                                            </label>
+                                                            <textarea
+                                                                id={`notes-${request._id}`}
+                                                                rows="3"
+                                                                placeholder={t(
+                                                                    "phcDashboard.notesPlaceholder"
+                                                                )}
+                                                                value={patientVitals.notes || ""}
+                                                                onChange={(e) =>
+                                                                    handleVitalsChange(
+                                                                        triageId,
+                                                                        "notes",
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={!triageId}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        className="phc-button phc-button-primary phc-save-vitals-button"
+                                                        onClick={() => recordVitals(request)}
+                                                        disabled={
+                                                            savingVitalsId === request._id ||
+                                                            !triageId
+                                                        }
+                                                    >
+                                                        {savingVitalsId === request._id && (
+                                                            <span className="phc-spinner" />
+                                                        )}
+                                                        {savingVitalsId === request._id
+                                                            ? t("phcDashboard.savingVitals")
+                                                            : t("phcDashboard.saveVitals")}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </section>
+                )}
+
+                {/* Emergency requests */}
+                {(emergencyRequests.length > 0 || emergencyLoaded) && (
+                    <section className="phc-content-section phc-emergency-section">
+                        <SectionHeading
+                            eyebrow={t("phcDashboard.emergencyEyebrow", {
+                                defaultValue: "PRIORITY RESPONSE"
+                            })}
+                            title={`🚨 ${t("phcDashboard.emergencyRequests")}`}
+                            description={t("phcDashboard.emergencyDescription", {
+                                defaultValue:
+                                    "Review emergency requests assigned to this facility and update the response status."
+                            })}
+                            count={emergencyRequests.length}
+                        >
+                            <button
+                                type="button"
+                                className="phc-button phc-button-light"
+                                onClick={fetchEmergencyRequests}
+                                disabled={emergencyLoading}
+                            >
+                                {emergencyLoading
+                                    ? t("phcDashboard.loadingEmergencyRequests")
+                                    : t("phcDashboard.refresh", {
+                                          defaultValue: "Refresh"
+                                      })}
+                            </button>
+                        </SectionHeading>
+
+                        {emergencyRequests.length === 0 ? (
+                            <EmptyState
+                                icon="✓"
+                                title={t("phcDashboard.noEmergencyTitle", {
+                                    defaultValue: "No pending emergency requests"
+                                })}
+                                description={t("phcDashboard.noPendingEmergency")}
+                            />
+                        ) : (
+                            <div className="phc-card-grid">
+                                {emergencyRequests.map((request) => (
+                                    <article
                                         key={request._id}
-                                        style={{
-                                            border: "2px solid #d32f2f",
-                                            borderRadius: "10px",
-                                            padding: "20px",
-                                            marginTop: "15px"
-                                        }}
+                                        className="phc-patient-card phc-emergency-card"
                                     >
-                                        <h3>
-                                            Patient:{" "}
-                                            {request.patient
-                                                ?.name ||
-                                                "Unknown"}
-                                        </h3>
+                                        <div className="phc-card-topline">
+                                            <span className="phc-emergency-label">
+                                                <span aria-hidden="true">🚨</span>
+                                                {t("phcDashboard.emergencyPriorityLabel", {
+                                                    defaultValue: "EMERGENCY REQUEST"
+                                                })}
+                                            </span>
+                                            <span
+                                                className={`phc-badge ${
+                                                    request.status === "in_progress"
+                                                        ? "phc-badge-warning"
+                                                        : "phc-badge-danger"
+                                                }`}
+                                            >
+                                                {request.status}
+                                            </span>
+                                        </div>
 
-                                        <p>
-                                            <strong>
-                                                Email:
-                                            </strong>{" "}
-                                            {request.patient
-                                                ?.email ||
-                                                "Unknown"}
-                                        </p>
+                                        <PatientIdentity request={request} />
 
-                                        <p>
-                                            <strong>
-                                                Emergency
-                                                Reason:
-                                            </strong>{" "}
-                                            {
-                                                request.emergencyReason
-                                            }
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Facility:
-                                            </strong>{" "}
-                                            {request
-                                                .requestedFacility
-                                                ?.name ||
-                                                "Not assigned"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Ambulance:
-                                            </strong>{" "}
-                                            {request.ambulanceRequested
-                                                ? "🚑 Requested"
-                                                : "Not requested"}
-                                        </p>
-
-                                        <p>
-                                            <strong>
-                                                Status:
-                                            </strong>{" "}
-                                            {request.status}
-                                        </p>
+                                        <div className="phc-detail-grid">
+                                            <InfoItem
+                                                label={t("phcDashboard.emergencyReason")}
+                                                value={request.emergencyReason}
+                                            />
+                                            <InfoItem
+                                                label={t("phcDashboard.facility")}
+                                                value={request.requestedFacility?.name ||
+                                                    t("phcDashboard.notAssigned")}
+                                            />
+                                            <InfoItem
+                                                label={t("phcDashboard.ambulance")}
+                                                value={
+                                                    request.ambulanceRequested
+                                                        ? `🚑 ${t(
+                                                              "phcDashboard.ambulanceRequested"
+                                                          )}`
+                                                        : t("phcDashboard.notRequested")
+                                                }
+                                            />
+                                            <InfoItem
+                                                label={t("phcDashboard.status")}
+                                                value={request.status}
+                                            />
+                                        </div>
 
                                         {request.emergencyGuidance && (
-                                            <div
-                                                style={{
-                                                    marginTop:
-                                                        "15px",
-                                                    padding:
-                                                        "15px",
-                                                    borderRadius:
-                                                        "8px",
-                                                    background:
-                                                        "#fff3f3"
-                                                }}
-                                            >
+                                            <div className="phc-emergency-guidance">
                                                 <strong>
-                                                    Emergency
-                                                    Guidance
+                                                    {t("phcDashboard.emergencyGuidance")}
                                                 </strong>
-
-                                                <p>
-                                                    {
-                                                        request.emergencyGuidance
-                                                    }
-                                                </p>
+                                                <p>{request.emergencyGuidance}</p>
                                             </div>
                                         )}
 
-                                        <div
-                                            style={{
-                                                marginTop:
-                                                    "20px"
-                                            }}
-                                        >
-                                            {request.status !==
-                                                "in_progress" &&
-                                                request.status !==
-                                                    "completed" &&
-                                                request.status !==
-                                                    "cancelled" && (
+                                        {request.notes && (
+                                            <div className="phc-recorded-notes">
+                                                <strong>
+                                                    {t("phcDashboard.notes")}
+                                                </strong>
+                                                <p>{request.notes}</p>
+                                            </div>
+                                        )}
+
+                                        <div className="phc-card-footer">
+                                            <span className="phc-muted-caption">
+                                                {t("phcDashboard.emergencyUpdateCaption", {
+                                                    defaultValue:
+                                                        "Update the status when your team begins or completes its response."
+                                                })}
+                                            </span>
+
+                                            {request.status !== "in_progress" &&
+                                                request.status !== "completed" &&
+                                                request.status !== "cancelled" && (
                                                     <button
-                                                        className="submit-button"
+                                                        type="button"
+                                                        className="phc-button phc-button-emergency"
                                                         onClick={() =>
                                                             updateEmergencyStatus(
                                                                 request._id,
@@ -1096,21 +1319,24 @@ const PHCDashboard = () => {
                                                             )
                                                         }
                                                         disabled={
-                                                            updatingEmergencyId ===
-                                                            request._id
+                                                            updatingEmergencyId === request._id
                                                         }
                                                     >
-                                                        {updatingEmergencyId ===
-                                                        request._id
-                                                            ? "Updating..."
-                                                            : "Start Emergency Response"}
+                                                        {updatingEmergencyId === request._id && (
+                                                            <span className="phc-spinner" />
+                                                        )}
+                                                        {updatingEmergencyId === request._id
+                                                            ? t("phcDashboard.updating")
+                                                            : t(
+                                                                  "phcDashboard.startEmergencyResponse"
+                                                              )}
                                                     </button>
                                                 )}
 
-                                            {request.status ===
-                                                "in_progress" && (
+                                            {request.status === "in_progress" && (
                                                 <button
-                                                    className="submit-button"
+                                                    type="button"
+                                                    className="phc-button phc-button-primary"
                                                     onClick={() =>
                                                         updateEmergencyStatus(
                                                             request._id,
@@ -1118,42 +1344,36 @@ const PHCDashboard = () => {
                                                         )
                                                     }
                                                     disabled={
-                                                        updatingEmergencyId ===
-                                                        request._id
+                                                        updatingEmergencyId === request._id
                                                     }
-                                                    style={{
-                                                        marginLeft:
-                                                            "10px"
-                                                    }}
                                                 >
-                                                    {updatingEmergencyId ===
-                                                    request._id
-                                                        ? "Updating..."
-                                                        : "Mark Completed"}
+                                                    {updatingEmergencyId === request._id && (
+                                                        <span className="phc-spinner" />
+                                                    )}
+                                                    {updatingEmergencyId === request._id
+                                                        ? t("phcDashboard.updating")
+                                                        : t("phcDashboard.markCompleted")}
                                                 </button>
                                             )}
                                         </div>
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    )}
-
-                    {emergencyRequests.length === 0 &&
-                        !emergencyLoading && (
-                            <p
-                                style={{
-                                    marginTop: "15px"
-                                }}
-                            >
-                                No pending emergency
-                                requests.
-                            </p>
+                                    </article>
+                                ))}
+                            </div>
                         )}
-                </div>
+                    </section>
+                )}
 
+                <footer className="phc-dashboard-footer">
+                    <span className="phc-footer-cross" aria-hidden="true">+</span>
+                    <p>
+                        {t("phcDashboard.footerNote", {
+                            defaultValue:
+                                "GramArogya · Supporting timely, accessible primary healthcare."
+                        })}
+                    </p>
+                </footer>
             </div>
-        </div>
+        </main>
     );
 };
 
