@@ -11,6 +11,7 @@ import GovernmentSchemes from "./GovernmentSchemes";
 import Emergency from "./Emergency";
 import PatientTriage from "./PatientTriage";
 import SpecialistDashboard from "./SpecialistDashboard";
+import AdminDashboard from "./AdminDashboard";
 
 import LanguageSelector from "../components/LanguageSelector";
 
@@ -196,6 +197,11 @@ const Login = () => {
     // Specialist dashboard
     if (isLoggedIn && userRole === "specialist") {
         return <SpecialistDashboard />;
+    }
+
+    // Admin dashboard
+    if (isLoggedIn && userRole === "admin") {
+        return <AdminDashboard onLogout={handleLogout} />;
     }
 
     // Patient dashboard and navigation
