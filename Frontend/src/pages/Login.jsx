@@ -64,12 +64,17 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+    const [otp, setOtp] = useState("");
+
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
     const [isSignup, setIsSignup] = useState(false);
+    const [forgotStep, setForgotStep] = useState(0);
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userRole, setUserRole] = useState("");
@@ -128,8 +133,6 @@ const Login = () => {
                 );
             }
 
-            // Registration creates a patient account.
-            // Ask the patient to sign in after registration.
             if (isSignup) {
                 setSuccess(
                     "Account created successfully! Please sign in."
@@ -142,7 +145,6 @@ const Login = () => {
                 return;
             }
 
-            // Save login credentials and user details.
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -152,6 +154,116 @@ const Login = () => {
             setError(
                 err.message ||
                 "Something went wrong. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+
+        setError("");
+        setSuccess("");
+
+        try {
+            setLoading(true);
+
+            const response = await fetch(
+                `${API_URL}/forgot-password`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: email.trim()
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Unable to request password reset."
+                );
+            }
+
+            setForgotStep(2);
+            setSuccess(
+                data.message ||
+                "If an account exists with this email, a password-reset OTP will be sent."
+            );
+        } catch (err) {
+            setError(
+                err.message || "Unable to send OTP. Please try again."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+
+        setError("");
+        setSuccess("");
+
+        if (!/^\d{6}$/.test(otp)) {
+            setError("Please enter a valid 6-digit OTP.");
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            setError("Password must contain at least 8 characters.");
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const response = await fetch(
+                `${API_URL}/reset-password`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: email.trim(),
+                        otp,
+                        newPassword
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Password reset failed."
+                );
+            }
+
+            setForgotStep(0);
+            setIsSignup(false);
+            setOtp("");
+            setNewPassword("");
+            setConfirmNewPassword("");
+            setPassword("");
+
+            setSuccess(
+                "Password reset successfully! You can now log in."
+            );
+        } catch (err) {
+            setError(
+                err.message || "Password reset failed. Please try again."
             );
         } finally {
             setLoading(false);
@@ -168,6 +280,25 @@ const Login = () => {
         setShowPassword(false);
     };
 
+    const openForgotPassword = () => {
+        setForgotStep(1);
+        setError("");
+        setSuccess("");
+        setPassword("");
+        setOtp("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+    };
+
+    const backToLogin = () => {
+        setForgotStep(0);
+        setError("");
+        setSuccess("");
+        setOtp("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+    };
+
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -182,6 +313,7 @@ const Login = () => {
         setPatientPage("facility");
         setIsLoggedIn(false);
         setIsSignup(false);
+        setForgotStep(0);
     };
 
     // PHC staff dashboard
@@ -440,196 +572,417 @@ const Login = () => {
 
                     <div className="login-form-content">
                         <span className="form-kicker">
-                            {isSignup ? "GET STARTED" : "WELCOME BACK"}
+                            {forgotStep === 1
+                                ? "ACCOUNT RECOVERY"
+                                : forgotStep === 2
+                                    ? "VERIFY YOUR EMAIL"
+                                    : isSignup
+                                        ? "GET STARTED"
+                                        : "WELCOME BACK"}
                         </span>
 
                         <h2>
-                            {isSignup
-                                ? "Create your account"
-                                : "Sign in to your account"}
+                            {forgotStep === 1
+                                ? "Forgot your password?"
+                                : forgotStep === 2
+                                    ? "Reset your password"
+                                    : isSignup
+                                        ? "Create your account"
+                                        : "Sign in to your account"}
                         </h2>
 
                         <p className="login-description">
-                            {isSignup
-                                ? "Create your patient account to access healthcare services."
-                                : "Enter your details to access your healthcare dashboard."}
+                            {forgotStep === 1
+                                ? "Enter your registered email address. We'll send you a password-reset OTP."
+                                : forgotStep === 2
+                                    ? "Enter the 6-digit OTP sent to your email and choose a new password."
+                                    : isSignup
+                                        ? "Create your patient account to access healthcare services."
+                                        : "Enter your details to access your healthcare dashboard."}
                         </p>
 
-                        <form onSubmit={handleSubmit}>
-                            {isSignup && (
+                        {/* Forgot password: request OTP */}
+                        {forgotStep === 1 && (
+                            <form onSubmit={handleForgotPassword}>
                                 <div className="login-field">
-                                    <label htmlFor="signup-name">
-                                        Full name
+                                    <label htmlFor="forgot-email">
+                                        Email address
                                     </label>
 
                                     <input
-                                        id="signup-name"
-                                        type="text"
-                                        autoComplete="name"
-                                        placeholder="Enter your full name"
-                                        value={name}
+                                        id="forgot-email"
+                                        type="email"
+                                        autoComplete="email"
+                                        placeholder="you@example.com"
+                                        value={email}
                                         onChange={(e) =>
-                                            setName(e.target.value)
+                                            setEmail(e.target.value)
                                         }
                                         required
-                                        minLength={2}
-                                        maxLength={100}
                                     />
                                 </div>
-                            )}
 
-                            <div className="login-field">
-                                <label htmlFor="login-email">
-                                    Email address
-                                </label>
+                                {error && (
+                                    <div
+                                        className="login-error"
+                                        role="alert"
+                                        aria-live="polite"
+                                    >
+                                        <span aria-hidden="true">!</span>
+                                        <span>{error}</span>
+                                    </div>
+                                )}
 
-                                <input
-                                    id="login-email"
-                                    type="email"
-                                    autoComplete="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) =>
-                                        setEmail(e.target.value)
-                                    }
-                                    required
-                                />
-                            </div>
+                                {success && (
+                                    <div
+                                        className="login-success"
+                                        role="status"
+                                    >
+                                        {success}
+                                    </div>
+                                )}
 
-                            <div className="login-field">
-                                <label htmlFor="login-password">
-                                    Password
-                                </label>
+                                <button
+                                    className="primary-button login-submit"
+                                    type="submit"
+                                    disabled={loading}
+                                >
+                                    {loading
+                                        ? "Sending OTP..."
+                                        : "Send OTP"}
+                                </button>
+                            </form>
+                        )}
 
-                                <div className="password-input-wrap">
+                        {/* Forgot password: verify OTP and reset */}
+                        {forgotStep === 2 && (
+                            <form onSubmit={handleResetPassword}>
+                                <div className="login-field">
+                                    <label htmlFor="reset-email">
+                                        Email address
+                                    </label>
+
                                     <input
-                                        id="login-password"
-                                        type={
-                                            showPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        autoComplete={
-                                            isSignup
-                                                ? "new-password"
-                                                : "current-password"
-                                        }
-                                        placeholder={
-                                            isSignup
-                                                ? "Create a password"
-                                                : "Enter your password"
-                                        }
-                                        value={password}
-                                        onChange={(e) =>
-                                            setPassword(e.target.value)
-                                        }
-                                        required
-                                        minLength={isSignup ? 8 : undefined}
+                                        id="reset-email"
+                                        type="email"
+                                        value={email}
+                                        readOnly
                                     />
+                                </div>
 
-                                    <button
-                                        className="password-toggle"
-                                        type="button"
-                                        onClick={() =>
-                                            setShowPassword(
-                                                (visible) => !visible
+                                <div className="login-field">
+                                    <label htmlFor="reset-otp">
+                                        6-digit OTP
+                                    </label>
+
+                                    <input
+                                        id="reset-otp"
+                                        type="text"
+                                        inputMode="numeric"
+                                        autoComplete="one-time-code"
+                                        placeholder="Enter your OTP"
+                                        value={otp}
+                                        onChange={(e) =>
+                                            setOtp(
+                                                e.target.value
+                                                    .replace(/\D/g, "")
+                                                    .slice(0, 6)
                                             )
                                         }
-                                        aria-label={
-                                            showPassword
-                                                ? "Hide password"
-                                                : "Show password"
-                                        }
-                                    >
-                                        {showPassword ? "Hide" : "Show"}
-                                    </button>
+                                        required
+                                        maxLength={6}
+                                    />
                                 </div>
 
-                                {isSignup && (
+                                <div className="login-field">
+                                    <label htmlFor="new-password">
+                                        New password
+                                    </label>
+
+                                    <div className="password-input-wrap">
+                                        <input
+                                            id="new-password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            autoComplete="new-password"
+                                            placeholder="Create a new password"
+                                            value={newPassword}
+                                            onChange={(e) =>
+                                                setNewPassword(e.target.value)
+                                            }
+                                            required
+                                            minLength={8}
+                                        />
+
+                                        <button
+                                            className="password-toggle"
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPassword(
+                                                    (visible) => !visible
+                                                )
+                                            }
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+
                                     <p className="optional-text">
                                         Use at least 8 characters.
                                     </p>
-                                )}
-                            </div>
+                                </div>
 
-                            {isSignup && (
                                 <div className="login-field">
-                                    <label htmlFor="confirm-password">
-                                        Confirm password
+                                    <label htmlFor="confirm-new-password">
+                                        Confirm new password
                                     </label>
 
                                     <input
-                                        id="confirm-password"
+                                        id="confirm-new-password"
                                         type={
                                             showPassword
                                                 ? "text"
                                                 : "password"
                                         }
                                         autoComplete="new-password"
-                                        placeholder="Enter your password again"
-                                        value={confirmPassword}
+                                        placeholder="Enter your new password again"
+                                        value={confirmNewPassword}
                                         onChange={(e) =>
-                                            setConfirmPassword(e.target.value)
+                                            setConfirmNewPassword(
+                                                e.target.value
+                                            )
                                         }
                                         required
                                     />
                                 </div>
-                            )}
 
-                            {error && (
-                                <div
-                                    className="login-error"
-                                    role="alert"
-                                    aria-live="polite"
-                                >
-                                    <span aria-hidden="true">!</span>
-                                    <span>{error}</span>
-                                </div>
-                            )}
-
-                            {success && (
-                                <div
-                                    role="status"
-                                    aria-live="polite"
-                                    style={{
-                                        marginBottom: "18px",
-                                        padding: "12px",
-                                        border: "1px solid #cfe8d5",
-                                        borderRadius: "10px",
-                                        background: "#f1faf3",
-                                        color: "#21643f",
-                                        fontSize: "12px",
-                                        lineHeight: 1.6
-                                    }}
-                                >
-                                    {success}
-                                </div>
-                            )}
-
-                            <button
-                                className="primary-button login-submit"
-                                type="submit"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <span className="button-spinner" />
-                                        {isSignup
-                                            ? "Creating account..."
-                                            : "Signing in..."}
-                                    </>
-                                ) : (
-                                    <>
-                                        {isSignup
-                                            ? "Create account"
-                                            : "Sign in"}
-
-                                        <span aria-hidden="true">→</span>
-                                    </>
+                                {error && (
+                                    <div
+                                        className="login-error"
+                                        role="alert"
+                                        aria-live="polite"
+                                    >
+                                        <span aria-hidden="true">!</span>
+                                        <span>{error}</span>
+                                    </div>
                                 )}
-                            </button>
-                        </form>
 
+                                <button
+                                    className="primary-button login-submit"
+                                    type="submit"
+                                    disabled={loading}
+                                >
+                                    {loading
+                                        ? "Resetting password..."
+                                        : "Reset password"}
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Existing login and signup */}
+                        {forgotStep === 0 && (
+                            <form onSubmit={handleSubmit}>
+                                {isSignup && (
+                                    <div className="login-field">
+                                        <label htmlFor="signup-name">
+                                            Full name
+                                        </label>
+
+                                        <input
+                                            id="signup-name"
+                                            type="text"
+                                            autoComplete="name"
+                                            placeholder="Enter your full name"
+                                            value={name}
+                                            onChange={(e) =>
+                                                setName(e.target.value)
+                                            }
+                                            required
+                                            minLength={2}
+                                            maxLength={100}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="login-field">
+                                    <label htmlFor="login-email">
+                                        Email address
+                                    </label>
+
+                                    <input
+                                        id="login-email"
+                                        type="email"
+                                        autoComplete="email"
+                                        placeholder="you@example.com"
+                                        value={email}
+                                        onChange={(e) =>
+                                            setEmail(e.target.value)
+                                        }
+                                        required
+                                    />
+                                </div>
+
+                                <div className="login-field">
+                                    <label htmlFor="login-password">
+                                        Password
+                                    </label>
+
+                                    <div className="password-input-wrap">
+                                        <input
+                                            id="login-password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            autoComplete={
+                                                isSignup
+                                                    ? "new-password"
+                                                    : "current-password"
+                                            }
+                                            placeholder={
+                                                isSignup
+                                                    ? "Create a password"
+                                                    : "Enter your password"
+                                            }
+                                            value={password}
+                                            onChange={(e) =>
+                                                setPassword(e.target.value)
+                                            }
+                                            required
+                                            minLength={
+                                                isSignup ? 8 : undefined
+                                            }
+                                        />
+
+                                        <button
+                                            className="password-toggle"
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPassword(
+                                                    (visible) => !visible
+                                                )
+                                            }
+                                            aria-label={
+                                                showPassword
+                                                    ? "Hide password"
+                                                    : "Show password"
+                                            }
+                                        >
+                                            {showPassword ? "Hide" : "Show"}
+                                        </button>
+                                    </div>
+
+                                    {isSignup && (
+                                        <p className="optional-text">
+                                            Use at least 8 characters.
+                                        </p>
+                                    )}
+                                </div>
+
+                                {isSignup && (
+                                    <div className="login-field">
+                                        <label htmlFor="confirm-password">
+                                            Confirm password
+                                        </label>
+
+                                        <input
+                                            id="confirm-password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            autoComplete="new-password"
+                                            placeholder="Enter your password again"
+                                            value={confirmPassword}
+                                            onChange={(e) =>
+                                                setConfirmPassword(
+                                                    e.target.value
+                                                )
+                                            }
+                                            required
+                                        />
+                                    </div>
+                                )}
+
+                                {!isSignup && (
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            justifyContent: "flex-end",
+                                            marginTop: "-8px",
+                                            marginBottom: "18px"
+                                        }}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={openForgotPassword}
+                                            style={{
+                                                padding: "4px 0",
+                                                border: 0,
+                                                background: "transparent",
+                                                color: "#24765e",
+                                                fontWeight: 700,
+                                                cursor: "pointer",
+                                                fontSize: "12px"
+                                            }}
+                                        >
+                                            Forgot password?
+                                        </button>
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <div
+                                        className="login-error"
+                                        role="alert"
+                                        aria-live="polite"
+                                    >
+                                        <span aria-hidden="true">!</span>
+                                        <span>{error}</span>
+                                    </div>
+                                )}
+
+                                {success && (
+                                    <div
+                                        className="login-success"
+                                        role="status"
+                                        aria-live="polite"
+                                    >
+                                        {success}
+                                    </div>
+                                )}
+
+                                <button
+                                    className="primary-button login-submit"
+                                    type="submit"
+                                    disabled={loading}
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="button-spinner" />
+                                            {isSignup
+                                                ? "Creating account..."
+                                                : "Signing in..."}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {isSignup
+                                                ? "Create account"
+                                                : "Sign in"}
+
+                                            <span aria-hidden="true">→</span>
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Navigation links */}
                         <div
                             style={{
                                 display: "flex",
@@ -642,28 +995,53 @@ const Login = () => {
                                 fontSize: "12px"
                             }}
                         >
-                            <span>
-                                {isSignup
-                                    ? "Already have an account?"
-                                    : "New to GramArogya?"}
-                            </span>
+                            {forgotStep !== 0 ? (
+                                <>
+                                    <span>Remembered your password?</span>
 
-                            <button
-                                type="button"
-                                onClick={switchAuthMode}
-                                disabled={loading}
-                                style={{
-                                    padding: "4px",
-                                    border: 0,
-                                    background: "transparent",
-                                    color: "#24765e",
-                                    fontWeight: 800,
-                                    cursor: "pointer",
-                                    fontSize: "12px"
-                                }}
-                            >
-                                {isSignup ? "Sign in" : "Sign up"}
-                            </button>
+                                    <button
+                                        type="button"
+                                        onClick={backToLogin}
+                                        disabled={loading}
+                                        style={{
+                                            padding: "4px",
+                                            border: 0,
+                                            background: "transparent",
+                                            color: "#24765e",
+                                            fontWeight: 800,
+                                            cursor: "pointer",
+                                            fontSize: "12px"
+                                        }}
+                                    >
+                                        Back to sign in
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <span>
+                                        {isSignup
+                                            ? "Already have an account?"
+                                            : "New to GramArogya?"}
+                                    </span>
+
+                                    <button
+                                        type="button"
+                                        onClick={switchAuthMode}
+                                        disabled={loading}
+                                        style={{
+                                            padding: "4px",
+                                            border: 0,
+                                            background: "transparent",
+                                            color: "#24765e",
+                                            fontWeight: 800,
+                                            cursor: "pointer",
+                                            fontSize: "12px"
+                                        }}
+                                    >
+                                        {isSignup ? "Sign in" : "Sign up"}
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         <div className="login-security-note">
