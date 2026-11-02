@@ -26,9 +26,7 @@ const getNearbyFacilities = async (req, res) => {
             });
         }
 
-        const facilities = await Facility.find({
-            isActive: true
-        });
+        const facilities = await Facility.find({ isActive: true });
 
         const calculateDistance = (lat1, lon1, lat2, lon2) => {
             const earthRadius = 6371;
@@ -42,45 +40,37 @@ const getNearbyFacilities = async (req, res) => {
                 Math.cos(lat2 * Math.PI / 180) *
                 Math.sin(lonDifference / 2) ** 2;
 
-            const c = 2 * Math.atan2(
-                Math.sqrt(a),
-                Math.sqrt(1 - a)
-            );
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
             return earthRadius * c;
         };
 
         const nearbyFacilities = facilities
-            .map((facility) => {
-                const distance = calculateDistance(
-                    userLatitude,
-                    userLongitude,
-                    facility.latitude,
-                    facility.longitude
-                );
-
-                return {
-                    ...facility.toObject(),
-                    distance: Number(distance.toFixed(2))
-                };
-            })
+            .map((facility) => ({
+                ...facility.toObject(),
+                distance: Number(
+                    calculateDistance(
+                        userLatitude,
+                        userLongitude,
+                        facility.latitude,
+                        facility.longitude
+                    ).toFixed(2)
+                )
+            }))
             .sort((a, b) => a.distance - b.distance);
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Nearby facilities fetched successfully",
             facilities: nearbyFacilities
         });
-
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: "Failed to fetch nearby facilities",
             error: error.message
         });
     }
 };
 
-
-// Get PHC facility for PHC staff
 const getPHCFacility = async (req, res) => {
     try {
         const facility = await Facility.findOne({
@@ -94,39 +84,129 @@ const getPHCFacility = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "PHC facility fetched successfully",
             facility
         });
-
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: "Failed to fetch PHC facility",
             error: error.message
         });
     }
 };
+
 const getActiveFacilities = async (req, res) => {
     try {
         const facilities = await Facility.find({
             isActive: true
         }).sort({ name: 1 });
 
-        res.status(200).json({
+        return res.status(200).json({
             message: "Active facilities fetched successfully",
             facilities
         });
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: "Failed to fetch facilities",
             error: error.message
         });
     }
 };
 
+// ================= ADMIN APIS =================
+
+const getAllFacilities = async (req, res) => {
+    try {
+        const facilities = await Facility.find().sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            message: "Facilities fetched successfully",
+            facilities
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Failed to fetch facilities",
+            error: error.message
+        });
+    }
+};
+
+const createFacility = async (req, res) => {
+    try {
+        const facility = await Facility.create(req.body);
+
+        return res.status(201).json({
+            message: "Facility created successfully",
+            facility
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Failed to create facility",
+            error: error.message
+        });
+    }
+};
+
+const updateFacility = async (req, res) => {
+    try {
+        const facility = await Facility.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
+        if (!facility) {
+            return res.status(404).json({
+                message: "Facility not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Facility updated successfully",
+            facility
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Failed to update facility",
+            error: error.message
+        });
+    }
+};
+
+const toggleFacilityStatus = async (req, res) => {
+    try {
+        const facility = await Facility.findById(req.params.id);
+
+        if (!facility) {
+            return res.status(404).json({
+                message: "Facility not found"
+            });
+        }
+
+        facility.isActive = !facility.isActive;
+        await facility.save();
+
+        return res.status(200).json({
+            message: `Facility ${
+                facility.isActive ? "activated" : "deactivated"
+            } successfully`,
+            facility
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Failed to update facility status",
+            error: error.message
+        });
+    }
+};
 
 module.exports = {
     getNearbyFacilities,
     getPHCFacility,
-    getActiveFacilities
+    getActiveFacilities,
+    getAllFacilities,
+    createFacility,
+    updateFacility,
+    toggleFacilityStatus
 };
