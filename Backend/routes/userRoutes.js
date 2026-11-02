@@ -6,7 +6,9 @@ const {
     getUsers,
     createStaffUser,
     loginUser,
-    assignSpecialistFacility
+    assignSpecialistFacility,
+    forgotPassword,
+    resetPassword
 } = require("../controller/userController");
 
 const User = require("../models/User");
@@ -20,6 +22,12 @@ router.post("/", createUser);
 
 // Public login
 router.post("/login", loginUser);
+
+// Public: request password-reset OTP
+router.post("/forgot-password", forgotPassword);
+
+// Public: verify OTP and reset password
+router.post("/reset-password", resetPassword);
 
 // Admin: list users with search, role filter and pagination
 router.get(

@@ -38,6 +38,27 @@ const userSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Facility",
             default: null
+        },
+
+        // Password reset fields
+        resetOtpHash: {
+            type: String,
+            default: null
+        },
+
+        resetOtpExpiresAt: {
+            type: Date,
+            default: null
+        },
+
+        resetOtpRequestedAt: {
+            type: Date,
+            default: null
+        },
+
+        resetOtpAttempts: {
+            type: Number,
+            default: 0
         }
     },
     {
