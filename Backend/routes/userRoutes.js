@@ -3,6 +3,7 @@ const express = require("express");
 
 const {
     createUser,
+    getUsers,
     createStaffUser,
     loginUser,
     assignSpecialistFacility
@@ -19,6 +20,14 @@ router.post("/", createUser);
 
 // Public login
 router.post("/login", loginUser);
+
+// Admin: list users with search, role filter and pagination
+router.get(
+    "/",
+    protect,
+    authorize("admin"),
+    getUsers
+);
 
 // Admin: create doctor, specialist, or PHC staff account
 router.post(

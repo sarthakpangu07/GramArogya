@@ -64,7 +64,102 @@ const createUser = async (req, res) => {
     }
 };
 
-// Admin-only staff creation; its route must use protect + authorize("admin")
+// Admin-only: get users with search, role filter and pagination
+const getUsers = async (req, res) => {
+    try {
+        const {
+            search = "",
+            role = "",
+            page = "1",
+            limit = "10"
+        } = req.query;
+
+        const allowedRoles = [
+            "patient",
+            "phc_staff",
+            "doctor",
+            "specialist",
+            "admin"
+        ];
+
+        if (role && !allowedRoles.includes(role)) {
+            return res.status(400).json({
+                message: "Invalid user role filter"
+            });
+        }
+
+        const pageNumber = Math.max(
+            1,
+            Number.parseInt(page, 10) || 1
+        );
+
+        const pageSize = Math.min(
+            50,
+            Math.max(1, Number.parseInt(limit, 10) || 10)
+        );
+
+        const filter = {};
+
+        if (role) {
+            filter.role = role;
+        }
+
+        const trimmedSearch = search.trim();
+
+        if (trimmedSearch) {
+            // Escape special regex characters supplied by the user
+            const escapedSearch = trimmedSearch.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+            );
+
+            const searchRegex = new RegExp(escapedSearch, "i");
+
+            filter.$or = [
+                { name: searchRegex },
+                { email: searchRegex }
+            ];
+        }
+
+        const skip = (pageNumber - 1) * pageSize;
+
+        const [users, total] = await Promise.all([
+            User.find(filter)
+                .select(
+                    "name email role assignedFacility createdAt updatedAt"
+                )
+                .populate(
+                    "assignedFacility",
+                    "name facilityType village district state"
+                )
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(pageSize)
+                .lean(),
+
+            User.countDocuments(filter)
+        ]);
+
+        return res.status(200).json({
+            message: "Users fetched successfully",
+            users,
+            pagination: {
+                total,
+                page: pageNumber,
+                limit: pageSize,
+                totalPages: Math.ceil(total / pageSize)
+            }
+        });
+    } catch (error) {
+        console.error("Get users error:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch users"
+        });
+    }
+};
+
+// Admin-only staff creation; route must use protect + authorize("admin")
 const createStaffUser = async (req, res) => {
     try {
         const {
@@ -78,6 +173,12 @@ const createStaffUser = async (req, res) => {
         if (!name || !email || !password || !role) {
             return res.status(400).json({
                 message: "Name, email, password and role are required"
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                message: "Password must contain at least 8 characters"
             });
         }
 
@@ -137,7 +238,7 @@ const createStaffUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            name,
+            name: name.trim(),
             email: normalizedEmail,
             password: hashedPassword,
             role,
@@ -296,6 +397,7 @@ const assignSpecialistFacility = async (req, res) => {
 
 module.exports = {
     createUser,
+    getUsers,
     createStaffUser,
     loginUser,
     assignSpecialistFacility
