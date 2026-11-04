@@ -1,4 +1,3 @@
-
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const Facility = require("../models/Facility");
@@ -109,7 +108,6 @@ const getUsers = async (req, res) => {
         const trimmedSearch = search.trim();
 
         if (trimmedSearch) {
-            // Escape special regex characters supplied by the user
             const escapedSearch = trimmedSearch.replace(
                 /[.*+?^${}()|[\]\\]/g,
                 "\\$&"
@@ -161,7 +159,7 @@ const getUsers = async (req, res) => {
     }
 };
 
-// Admin-only staff creation; route must use protect + authorize("admin")
+// Admin-only staff creation
 const createStaffUser = async (req, res) => {
     try {
         const {
@@ -268,6 +266,7 @@ const createStaffUser = async (req, res) => {
     }
 };
 
+// User login
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -329,9 +328,10 @@ const loginUser = async (req, res) => {
     }
 };
 
-
 // Request a password-reset OTP
 const forgotPassword = async (req, res) => {
+    console.log("[Forgot Password] Request received.");
+
     try {
         const { email } = req.body;
 
@@ -346,27 +346,43 @@ const forgotPassword = async (req, res) => {
         const genericMessage =
             "If an account exists with this email, a password-reset OTP will be sent.";
 
+        console.log("[Forgot Password] Searching for user...");
+
         const user = await User.findOne({
             email: normalizedEmail
         });
 
-        // Do not reveal whether an account exists.
         if (!user) {
+            console.log("[Forgot Password] User not found.");
+
             return res.status(200).json({
                 message: genericMessage
             });
         }
 
-        // Allow one OTP request per minute.
-        if (
-            user.resetOtpRequestedAt &&
-            Date.now() - user.resetOtpRequestedAt.getTime() < 60 * 1000
-        ) {
-            return res.status(200).json({
-                message: genericMessage
-            });
+        console.log("[Forgot Password] User found.");
+
+        // Check 60-second cooldown
+        if (user.resetOtpRequestedAt) {
+            const elapsedTime =
+                Date.now() - user.resetOtpRequestedAt.getTime();
+
+            console.log(
+                "[Forgot Password] Previous request age:",
+                elapsedTime,
+                "ms"
+            );
+
+            if (elapsedTime < 60 * 1000) {
+                console.log("[Forgot Password] Request blocked by cooldown.");
+
+                return res.status(200).json({
+                    message: genericMessage
+                });
+            }
         }
 
+        // Generate six-digit OTP
         const otp = crypto.randomInt(100000, 1000000).toString();
 
         user.resetOtpHash = crypto
@@ -380,15 +396,27 @@ const forgotPassword = async (req, res) => {
 
         await user.save();
 
+        console.log("[Forgot Password] OTP saved. Calling Resend...");
+
         try {
-            await sendResetOtp(normalizedEmail, otp);
+            const emailResult = await sendResetOtp(normalizedEmail, otp);
+
+            console.log(
+                "[Forgot Password] Resend accepted email. ID:",
+                emailResult?.id
+            );
         } catch (emailError) {
+            console.error(
+                "[Forgot Password] Resend failed:",
+                emailError
+            );
+
             user.resetOtpHash = null;
             user.resetOtpExpiresAt = null;
+            user.resetOtpRequestedAt = null;
             user.resetOtpAttempts = 0;
-            await user.save();
 
-            console.error("Password reset email failed:", emailError);
+            await user.save();
 
             return res.status(500).json({
                 message: "Unable to send OTP email. Please try again later."
@@ -400,14 +428,13 @@ const forgotPassword = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Forgot password error:", error);
+        console.error("[Forgot Password] Controller error:", error);
 
         return res.status(500).json({
             message: "Unable to process password reset request"
         });
     }
 };
-
 
 // Verify OTP and reset password
 const resetPassword = async (req, res) => {
@@ -449,6 +476,7 @@ const resetPassword = async (req, res) => {
             user.resetOtpHash = null;
             user.resetOtpExpiresAt = null;
             user.resetOtpAttempts = 0;
+
             await user.save();
 
             return res.status(400).json({
@@ -460,6 +488,7 @@ const resetPassword = async (req, res) => {
             user.resetOtpHash = null;
             user.resetOtpExpiresAt = null;
             user.resetOtpAttempts = 0;
+
             await user.save();
 
             return res.status(429).json({
@@ -509,7 +538,6 @@ const resetPassword = async (req, res) => {
         });
     }
 };
-
 
 // Admin-only: assign or change a specialist's facility
 const assignSpecialistFacility = async (req, res) => {

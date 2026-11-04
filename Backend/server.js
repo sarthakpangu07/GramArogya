@@ -4,8 +4,8 @@ dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 require("dotenv").config();
 
-console.log("EMAIL_USER loaded:", !!process.env.EMAIL_USER);
-console.log("EMAIL_PASS loaded:", !!process.env.EMAIL_PASS);
+console.log("RESEND_API_KEY loaded:", !!process.env.RESEND_API_KEY);
+console.log("RESEND_FROM_EMAIL loaded:", !!process.env.RESEND_FROM_EMAIL);
 
 const app = require("./app");
 const connectDB = require("./config/db");

@@ -1,5 +1,7 @@
+
 import { useState, useEffect, useCallback } from "react";
 import "./AdminDashboard.css";
+import UserManagement from "./UserManagement";
 
 const ADMIN_STATS_URL =
     "https://gramarogya-27q3.onrender.com/api/admin/stats";
@@ -62,7 +64,6 @@ const AdminDashboard = ({ onLogout }) => {
         (section) => section.id === activeSection
     );
 
-    // Fetch live statistics from the backend
     const fetchStats = useCallback(async () => {
         try {
             setStatsLoading(true);
@@ -71,9 +72,7 @@ const AdminDashboard = ({ onLogout }) => {
             const token = localStorage.getItem("token");
 
             if (!token) {
-                throw new Error(
-                    "Admin session not found. Please log in again."
-                );
+                throw new Error("Admin session not found. Please log in again.");
             }
 
             const response = await fetch(ADMIN_STATS_URL, {
@@ -84,31 +83,28 @@ const AdminDashboard = ({ onLogout }) => {
                 }
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => null);
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Unable to fetch dashboard statistics."
+                    data?.message || "Unable to fetch dashboard statistics."
                 );
             }
 
-            if (!data.stats) {
-                throw new Error(
-                    "The server returned an invalid statistics response."
-                );
+            if (!data?.stats) {
+                throw new Error("Invalid statistics response from server.");
             }
 
             setStats(data.stats);
         } catch (error) {
             setStatsError(
-                error.message || "Something went wrong while loading statistics."
+                error.message || "Unable to load dashboard statistics."
             );
         } finally {
             setStatsLoading(false);
         }
     }, []);
 
-    // Fetch statistics when the dashboard opens
     useEffect(() => {
         fetchStats();
     }, [fetchStats]);
@@ -124,7 +120,6 @@ const AdminDashboard = ({ onLogout }) => {
         window.location.reload();
     };
 
-    // Statistics displayed on the overview
     const statCards = stats
         ? [
               {
@@ -240,8 +235,7 @@ const AdminDashboard = ({ onLogout }) => {
                     <div>
                         <strong>Loading dashboard statistics</strong>
                         <p>
-                            Connecting to the GramArogya backend and
-                            retrieving database counts.
+                            Retrieving information from the GramArogya database.
                         </p>
                     </div>
                 </div>
@@ -271,16 +265,6 @@ const AdminDashboard = ({ onLogout }) => {
                         type="button"
                         onClick={fetchStats}
                         disabled={statsLoading}
-                        style={{
-                            padding: "8px 13px",
-                            border: "0",
-                            borderRadius: "7px",
-                            background: "#a43c3c",
-                            color: "#ffffff",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            cursor: "pointer"
-                        }}
                     >
                         Try again
                     </button>
@@ -530,9 +514,13 @@ const AdminDashboard = ({ onLogout }) => {
                 </header>
 
                 <div className="admin-main-content">
-                    {activeSection === "overview"
-                        ? renderOverview()
-                        : renderPlaceholder()}
+                    {activeSection === "overview" && renderOverview()}
+
+                    {activeSection === "users" && <UserManagement />}
+
+                    {activeSection !== "overview" &&
+                        activeSection !== "users" &&
+                        renderPlaceholder()}
                 </div>
 
                 <footer className="admin-footer">
